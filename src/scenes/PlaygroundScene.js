@@ -8,6 +8,8 @@ import { LearningService } from '../services/LearningService.js';
 import { GameStateService } from '../services/GameStateService.js';
 import { LevelService } from '../services/LevelService.js';
 import { Hud } from '../ui/Hud.js';
+import { MobileControls } from '../ui/MobileControls.js';
+import { MobileTutorial } from '../ui/MobileTutorial.js';
 import { SpawnSystem } from '../systems/SpawnSystem.js';
 import { VoiceService } from '../services/VoiceService.js';
 
@@ -24,6 +26,8 @@ export class PlaygroundScene extends Scene {
     this.levels = null;
     this.spawner = null;
     this.hud = null;
+    this.mobileControls = null;
+    this.mobileTutorial = null;
     this.voice = null;
     this.hudMessage = '';
     this.currentLevelId = 'level01';
@@ -56,6 +60,8 @@ export class PlaygroundScene extends Scene {
     this.hudMessage = this.localization.t('hud.fire');
     this.hud = new Hud(this.game, this.localization, this.state, this.learning);
     this.hud.bind();
+    this.mobileControls = new MobileControls(this.game);
+    this.mobileTutorial = new MobileTutorial();
     console.log('PlaygroundScene started');
   }
 
@@ -81,6 +87,8 @@ export class PlaygroundScene extends Scene {
       this.hud.destroy();
       this.hud = null;
     }
+    this.mobileControls = null;
+    this.mobileTutorial = null;
     this.state = null;
   }
 
@@ -97,6 +105,19 @@ export class PlaygroundScene extends Scene {
     if (this.game.input.pointer.clicked && this.hud) {
       const { x, y } = this.game.input.pointer;
 
+      if (this.mobileTutorial?.shouldShow()) {
+        const skipBounds = {
+          x: 18 + (this.game.width - 36) - 110,
+          y: this.game.height - 250 + 18,
+          w: 92,
+          h: 34,
+        };
+        if (this.mobileTutorial.isInsideSkip(x, y, skipBounds)) {
+          this.mobileTutorial.dismiss();
+          return;
+        }
+      }
+
       if (this.state?.roundResult === 'win' && this.hud.isInsideNextButton(x, y)) {
         const nextLevelId = this.levels?.getNextLevelId();
         if (nextLevelId) {
@@ -110,6 +131,21 @@ export class PlaygroundScene extends Scene {
         this.game.changeScene('PlaygroundScene');
         return;
       }
+    }
+
+    const mobileHit = this.mobileControls?.hitTest(this.game.input.pointer.x, this.game.input.pointer.y);
+    if (this.mobileControls) {
+      this.mobileControls.activeButton = mobileHit;
+    }
+    if (mobileHit === 'left') {
+      this.game.input.keysDown.add('ArrowLeft');
+    } else if (mobileHit === 'right') {
+      this.game.input.keysDown.add('ArrowRight');
+    } else if (mobileHit === 'fire' && this.game.input.pointer.clicked) {
+      this.game.input.keysPressed.add(' ');
+    } else {
+      this.game.input.keysDown.delete('ArrowLeft');
+      this.game.input.keysDown.delete('ArrowRight');
     }
 
     if (!this.state?.roundActive) {
@@ -231,6 +267,8 @@ export class PlaygroundScene extends Scene {
 
   render(ctx) {
     this.hud?.render(ctx);
+    this.mobileControls?.render(ctx);
+    this.mobileTutorial?.render(ctx, this.game.width, this.game.height);
     ctx.fillStyle = '#ffffff';
     ctx.font = '18px Arial';
     ctx.fillText(`EN preview: ${enLocale['hud.fire']}`, 40, 190);

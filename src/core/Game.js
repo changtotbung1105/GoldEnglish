@@ -5,6 +5,7 @@ import { AssetLoader } from './AssetLoader.js';
 import { EntityManager } from '../entities/EntityManager.js';
 import { RenderContext } from '../rendering/RenderContext.js';
 import { BackgroundRenderer } from '../rendering/BackgroundRenderer.js';
+import { ViewportManager } from './ViewportManager.js';
 
 export class Game {
   constructor({ canvas, width, height, scenes = [] }) {
@@ -19,12 +20,15 @@ export class Game {
     this.entities = new EntityManager();
     this.renderer = new RenderContext(this);
     this.background = new BackgroundRenderer();
+    this.viewport = new ViewportManager(canvas, width, height);
     this.scenes = new Map();
     this.currentScene = null;
     this.isRunning = false;
 
-    this.resizeCanvas();
-    window.addEventListener('resize', () => this.resizeCanvas());
+    this.input.setViewport(this.viewport);
+    this.viewport.resize();
+    window.addEventListener('resize', () => this.viewport.resize());
+    window.addEventListener('orientationchange', () => this.viewport.resize());
 
     for (const scene of scenes) {
       this.registerScene(scene);
@@ -95,10 +99,5 @@ export class Game {
 
   clear() {
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-  }
-
-  resizeCanvas() {
-    this.canvas.width = this.width;
-    this.canvas.height = this.height;
   }
 }

@@ -1,6 +1,7 @@
 export class InputManager {
   constructor(canvas) {
     this.canvas = canvas;
+    this.viewport = null;
     this.keysDown = new Set();
     this.keysPressed = new Set();
     this.pointer = {
@@ -26,6 +27,10 @@ export class InputManager {
     this.canvas.addEventListener('pointerdown', this.handlePointerDown);
     window.addEventListener('pointerup', this.handlePointerUp);
     this.canvas.addEventListener('click', this.handleClick);
+  }
+
+  setViewport(viewport) {
+    this.viewport = viewport;
   }
 
   detach() {

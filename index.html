@@ -12,12 +12,19 @@
         overflow: hidden;
         background: #101820;
         font-family: Arial, sans-serif;
+        overscroll-behavior: none;
+        -webkit-user-select: none;
+        user-select: none;
       }
       canvas {
         display: block;
-        width: 100vw;
-        height: 100vh;
+        width: 1280px;
+        height: 720px;
         background: linear-gradient(#1b2a41, #09111f);
+        touch-action: none;
+      }
+      body {
+        position: relative;
       }
     </style>
   </head>

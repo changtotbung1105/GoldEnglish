@@ -80,30 +80,35 @@ export class Hud {
     const timeLeft = this.state.timeLeft;
     const hasPrompt = !!this.prompt;
     const isRoundOver = !this.state.roundActive;
+    const isCompact = this.game.width < 1000 || this.game.height < 700;
 
     ctx.save();
-    this.drawPanel(ctx, 24, 20, 545, hasPrompt ? 170 : 140);
+    const panelWidth = isCompact ? this.game.width - 32 : 545;
+    const panelHeight = hasPrompt ? (isCompact ? 210 : 170) : (isCompact ? 165 : 140);
+    this.drawPanel(ctx, 16, 16, panelWidth, panelHeight);
 
     ctx.fillStyle = '#f6e7c1';
     ctx.font = '700 24px Arial';
-    ctx.fillText('Mission HUD', 40, 48);
+    ctx.fillText('Mission HUD', 32, 44);
 
-    this.drawBadge(ctx, 40, 62, 125, 34, '#1f5f8b', `Score  ${score}`);
-    this.drawBadge(ctx, 176, 62, 125, 34, '#8a5f1f', `Time  ${Math.ceil(timeLeft)}`);
+    const badgeW = isCompact ? 112 : 125;
+    const badgeGap = 10;
+    this.drawBadge(ctx, 32, 56, badgeW, 34, '#1f5f8b', `Score  ${score}`);
+    this.drawBadge(ctx, 32 + badgeW + badgeGap, 56, badgeW, 34, '#8a5f1f', `Time  ${Math.ceil(timeLeft)}`);
 
     ctx.fillStyle = '#f9f0da';
-    ctx.font = '18px Arial';
-    ctx.fillText(this.message, 40, 122);
+    ctx.font = isCompact ? '16px Arial' : '18px Arial';
+    ctx.fillText(this.message, 32, isCompact ? 110 : 122);
 
     if (this.prompt) {
-      this.drawPromptCard(ctx, 280, 42, 270, 90, this.prompt);
+      this.drawPromptCard(ctx, isCompact ? 32 : 280, isCompact ? 132 : 42, isCompact ? panelWidth - 64 : 270, isCompact ? 72 : 90, this.prompt);
     }
 
     if (this.outcome) {
       const outcomeColor = this.outcome.type === 'success' ? '#7CFF6B' : '#FF6B6B';
       ctx.fillStyle = outcomeColor;
       ctx.font = 'bold 20px Arial';
-      ctx.fillText(this.outcome.message, 40, isRoundOver ? 188 : 152);
+      ctx.fillText(this.outcome.message, 32, isRoundOver ? (isCompact ? panelHeight - 18 : 188) : (isCompact ? 160 : 152));
     }
 
     this.drawButton(ctx, this.speakButton, 'Speak', '#2d7dd2');
