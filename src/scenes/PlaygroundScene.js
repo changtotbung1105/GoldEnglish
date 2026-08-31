@@ -31,6 +31,8 @@ export class PlaygroundScene extends Scene {
     this.voice = null;
     this.hudMessage = '';
     this.currentLevelId = 'level01';
+    this.currentTarget = null;
+    this.levelTargetOff = null;
   }
 
   enter() {
@@ -40,6 +42,12 @@ export class PlaygroundScene extends Scene {
     this.levels = new LevelService(this.game.eventBus, this.learning, this.state);
     this.spawner = new SpawnSystem(this.levels);
     this.voice = new VoiceService(this.game.eventBus, this.localization);
+    this.levelTargetOff = this.game.eventBus.on('level.target.changed', ({ target }) => {
+      this.currentTarget = target;
+      if (this.hud) {
+        this.hud.target = target;
+      }
+    });
     this.levels.loadLevel(this.currentLevelId);
 
     this.hook = new Hook({
@@ -60,6 +68,7 @@ export class PlaygroundScene extends Scene {
     this.hudMessage = this.localization.t('hud.fire');
     this.hud = new Hud(this.game, this.localization, this.state, this.learning);
     this.hud.bind();
+    this.hud.target = this.currentTarget;
     this.mobileControls = new MobileControls(this.game);
     this.mobileTutorial = new MobileTutorial();
     console.log('PlaygroundScene started');
@@ -90,6 +99,10 @@ export class PlaygroundScene extends Scene {
     this.mobileControls = null;
     this.mobileTutorial = null;
     this.state = null;
+    if (this.levelTargetOff) {
+      this.levelTargetOff();
+      this.levelTargetOff = null;
+    }
   }
 
   spawnLevelItems() {
@@ -137,15 +150,15 @@ export class PlaygroundScene extends Scene {
     if (this.mobileControls) {
       this.mobileControls.activeButton = mobileHit;
     }
-    if (mobileHit === 'left') {
-      this.game.input.keysDown.add('ArrowLeft');
-    } else if (mobileHit === 'right') {
-      this.game.input.keysDown.add('ArrowRight');
-    } else if (mobileHit === 'fire' && this.game.input.pointer.clicked) {
-      this.game.input.keysPressed.add(' ');
-    } else {
-      this.game.input.keysDown.delete('ArrowLeft');
-      this.game.input.keysDown.delete('ArrowRight');
+    const isTouchingControls = this.game.input.pointer.down || this.game.input.pointer.pressed;
+    if (isTouchingControls) {
+      if (mobileHit === 'left') {
+        this.game.input.keysDown.add('ArrowLeft');
+      } else if (mobileHit === 'right') {
+        this.game.input.keysDown.add('ArrowRight');
+      } else if (mobileHit === 'fire' && this.game.input.pointer.clicked) {
+        this.game.input.keysPressed.add(' ');
+      }
     }
 
     if (!this.state?.roundActive) {
@@ -157,8 +170,9 @@ export class PlaygroundScene extends Scene {
     if (this.hook.state === 'idle') {
       const manualLeft = this.game.input.isKeyDown('ArrowLeft');
       const manualRight = this.game.input.isKeyDown('ArrowRight');
+      const directPointerAim = this.game.input.pointer.down && !mobileHit;
 
-      if (manualLeft || manualRight) {
+      if (manualLeft || manualRight || directPointerAim) {
         this.hook.clearAutoAimTarget();
       }
 
@@ -170,10 +184,10 @@ export class PlaygroundScene extends Scene {
         this.hook.adjustAngle(this.hook.manualAngleSpeed * dt);
       }
 
-      if (!manualLeft && !manualRight && this.hook.autoAimTargetAngle === null) {
-        const targetAngle = this.findBestHookAngle();
+      if (directPointerAim) {
+        const targetAngle = this.getPointerAimAngle();
         if (targetAngle !== null) {
-          this.hook.setAutoAimTarget(targetAngle);
+          this.hook.setAngle(targetAngle);
         }
       }
     }
@@ -197,34 +211,15 @@ export class PlaygroundScene extends Scene {
 
     if (this.hook.state === 'extending') {
       for (const item of this.items) {
-        if (!item.active || item.attached) continue;
+        if (!item.active || item.attached || item.collidable === false) continue;
 
         if (CollisionSystem.intersects(this.hook, item)) {
-          item.onCollected();
-          this.hook.attach(item);
-          this.learning.onItemCollected(item);
-
-          const prompt = this.learning.getCurrentPrompt();
-          this.hudMessage = prompt
-            ? `${this.localization.t('item.word')}: ${prompt.term} - ${prompt.translation}`
-            : this.localization.t('hud.fire');
-
-          if (item.type === 'gold') {
-            this.state.addScore(item.value);
-            this.state.setOutcome('success', `+${item.value} Gold`);
-          } else if (item.type === 'bomb') {
-            this.state.addScore(item.value);
-            this.state.setOutcome('danger', 'Boom! Bomb hit');
-          } else if (item.type === 'word') {
-            this.state.addScore(item.value);
-            this.state.setOutcome('success', `Word collected: ${prompt.term}`);
-            this.hudMessage = 'Press V to speak the word';
-          }
-
-          this.collectedItems += 1;
-          if (this.collectedItems >= this.totalItems) {
-            this.state.endRound('win', 'Level cleared!');
-            this.hudMessage = 'Level cleared! Click Next';
+          const shouldAttach = this.handleCollectedItem(item);
+          if (shouldAttach) {
+            item.onCollected();
+            this.hook.attach(item);
+          } else {
+            this.hook.state = 'retracting';
           }
           break;
         }
@@ -232,37 +227,56 @@ export class PlaygroundScene extends Scene {
     }
   }
 
-  findBestHookAngle() {
-    const hookOrigin = { x: this.hook.anchorX, y: this.hook.anchorY };
-    let bestItem = null;
-    let bestDistance = Infinity;
-
-    for (const item of this.items) {
-      if (!item.active || item.attached) continue;
-
-      const dx = item.x - hookOrigin.x;
-      const dy = item.y - hookOrigin.y;
-      const angle = Math.atan2(dy, dx);
-      const normalized = angle < 0 ? angle + Math.PI * 2 : angle;
-      const clampedAngle = this.hook.clampAngle(normalized);
-      const aimX = hookOrigin.x + Math.cos(clampedAngle) * 1;
-      const aimY = hookOrigin.y + Math.sin(clampedAngle) * 1;
-      const distance = Math.hypot(item.x - aimX, item.y - aimY);
-
-      if (distance < bestDistance) {
-        bestDistance = distance;
-        bestItem = item;
-      }
-    }
-
-    if (!bestItem) {
+  getPointerAimAngle() {
+    const pointer = this.game.input.pointer;
+    const dx = pointer.x - this.hook.anchorX;
+    const dy = pointer.y - this.hook.anchorY;
+    if (dx === 0 && dy === 0) {
       return null;
     }
 
-    const dx = bestItem.x - hookOrigin.x;
-    const dy = bestItem.y - hookOrigin.y;
-    const targetAngle = Math.atan2(dy, dx);
-    return this.hook.clampAngle(targetAngle < 0 ? targetAngle + Math.PI * 2 : targetAngle);
+    const angle = Math.atan2(dy, dx);
+    return this.hook.clampAngle(angle < 0 ? angle + Math.PI * 2 : angle);
+  }
+
+  handleCollectedItem(item) {
+    if (item.type === 'word') {
+      const correctTarget = this.currentTarget;
+      const isCorrect = !!correctTarget && item.wordId === correctTarget.id;
+
+      if (isCorrect) {
+        this.learning.onItemCollected(item);
+        this.state.addScore(item.value);
+        this.state.setOutcome('success', `Correct: ${correctTarget.term}`);
+        this.hudMessage = `Correct: ${correctTarget.term}`;
+        this.currentTarget = this.levels.advanceTarget();
+        this.collectedItems += 1;
+        return true;
+      } else {
+        this.state.setOutcome('danger', `Wrong word: ${item.displayWord ?? item.wordId}`);
+        this.hudMessage = `Wrong! Need: ${correctTarget?.term ?? '---'}`;
+        item.collidable = false;
+        return false;
+      }
+    } else if (item.type === 'gold') {
+      this.state.addScore(item.value);
+      this.state.setOutcome('success', `+${item.value} Gold`);
+      this.hudMessage = 'Gold collected';
+      return false;
+    } else if (item.type === 'bomb') {
+      this.state.addScore(item.value);
+      this.state.setOutcome('danger', 'Boom! Bomb hit');
+      this.hudMessage = 'Avoid bombs';
+      item.collidable = false;
+      return false;
+    }
+
+    if (!this.currentTarget && this.state.roundActive) {
+      this.state.endRound('win', 'All target words cleared!');
+      this.hudMessage = 'All target words cleared! Click Next';
+    }
+
+    return false;
   }
 
   render(ctx) {

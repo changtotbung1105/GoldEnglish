@@ -19,6 +19,7 @@ export class LearningService {
     }
 
     item.learningData = entry;
+    item.displayWord = entry.term;
     item.translation = entry.translation.vi;
     item.pronunciation = entry.pronunciation;
     return entry;

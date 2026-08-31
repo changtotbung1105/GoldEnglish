@@ -2,6 +2,7 @@ export const level02 = Object.freeze({
   id: 'level02',
   name: 'Simple Actions',
   timeLimit: 55,
+  targetSequence: ['vocab_002', 'vocab_001', 'vocab_002', 'vocab_001'],
   spawnPoints: [
     { x: 430, y: 360 },
     { x: 630, y: 440 },

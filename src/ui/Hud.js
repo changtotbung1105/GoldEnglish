@@ -5,6 +5,7 @@ export class Hud {
     this.state = gameStateService;
     this.learning = learningService;
     this.prompt = null;
+    this.target = null;
     this.message = this.localization.t('hud.fire');
     this.unsubscribe = [];
     this.speakButton = { x: 40, y: 230, width: 130, height: 38 };
@@ -17,6 +18,15 @@ export class Hud {
       this.game.eventBus.on('learning.word.collected', ({ prompt }) => {
         this.prompt = prompt;
         this.message = `${this.localization.t('item.word')}: ${prompt.term} - ${prompt.translation}`;
+      })
+    );
+
+    this.unsubscribe.push(
+      this.game.eventBus.on('level.target.changed', ({ target }) => {
+        this.target = target;
+        this.message = target
+          ? `Catch this word: ${target.term}`
+          : 'Level complete. Click Next';
       })
     );
 
@@ -78,37 +88,41 @@ export class Hud {
   render(ctx) {
     const score = this.state.score;
     const timeLeft = this.state.timeLeft;
-    const hasPrompt = !!this.prompt;
     const isRoundOver = !this.state.roundActive;
     const isCompact = this.game.width < 1000 || this.game.height < 700;
 
     ctx.save();
-    const panelWidth = isCompact ? this.game.width - 32 : 545;
-    const panelHeight = hasPrompt ? (isCompact ? 210 : 170) : (isCompact ? 165 : 140);
+    const panelWidth = isCompact ? this.game.width - 32 : 620;
+    const panelHeight = isCompact ? 220 : 180;
     this.drawPanel(ctx, 16, 16, panelWidth, panelHeight);
 
     ctx.fillStyle = '#f6e7c1';
     ctx.font = '700 24px Arial';
-    ctx.fillText('Mission HUD', 32, 44);
+    ctx.fillText('Gold English', 32, 44);
 
     const badgeW = isCompact ? 112 : 125;
     const badgeGap = 10;
     this.drawBadge(ctx, 32, 56, badgeW, 34, '#1f5f8b', `Score  ${score}`);
     this.drawBadge(ctx, 32 + badgeW + badgeGap, 56, badgeW, 34, '#8a5f1f', `Time  ${Math.ceil(timeLeft)}`);
 
-    ctx.fillStyle = '#f9f0da';
-    ctx.font = isCompact ? '16px Arial' : '18px Arial';
-    ctx.fillText(this.message, 32, isCompact ? 110 : 122);
+    this.drawTargetCard(
+      ctx,
+      isCompact ? 32 : 32,
+      isCompact ? 108 : 108,
+      isCompact ? panelWidth - 64 : 330,
+      isCompact ? 78 : 72,
+      this.target
+    );
 
-    if (this.prompt) {
-      this.drawPromptCard(ctx, isCompact ? 32 : 280, isCompact ? 132 : 42, isCompact ? panelWidth - 64 : 270, isCompact ? 72 : 90, this.prompt);
-    }
+    ctx.fillStyle = '#f9f0da';
+    ctx.font = isCompact ? '15px Arial' : '16px Arial';
+    ctx.fillText(this.message, isCompact ? 32 : 380, isCompact ? 140 : 136);
 
     if (this.outcome) {
       const outcomeColor = this.outcome.type === 'success' ? '#7CFF6B' : '#FF6B6B';
       ctx.fillStyle = outcomeColor;
       ctx.font = 'bold 20px Arial';
-      ctx.fillText(this.outcome.message, 32, isRoundOver ? (isCompact ? panelHeight - 18 : 188) : (isCompact ? 160 : 152));
+      ctx.fillText(this.outcome.message, 32, isRoundOver ? (isCompact ? panelHeight - 18 : 162) : (isCompact ? 178 : 162));
     }
 
     this.drawButton(ctx, this.speakButton, 'Speak', '#2d7dd2');
@@ -162,6 +176,28 @@ export class Hud {
     ctx.font = '14px Arial';
     ctx.fillText(prompt.pronunciation, x + 12, y + 46);
     ctx.fillText(prompt.translation, x + 12, y + 66);
+    ctx.restore();
+  }
+
+  drawTargetCard(ctx, x, y, w, h, target) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(255, 248, 230, 0.96)';
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = 'rgba(140, 92, 34, 0.75)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, w, h);
+
+    ctx.fillStyle = '#7b4a11';
+    ctx.font = 'bold 14px Arial';
+    ctx.fillText('NGHIA TIENG VIET', x + 14, y + 20);
+
+    ctx.fillStyle = '#2b1c10';
+    ctx.font = 'bold 28px Arial';
+    ctx.fillText(target?.translation?.vi ?? '---', x + 14, y + 50);
+
+    ctx.font = '14px Arial';
+    ctx.fillStyle = '#6d4b23';
+    ctx.fillText(target ? `${target.term}  |  ${target.pronunciation}` : 'Cho muc tieu tiep theo', x + 14, y + 68);
     ctx.restore();
   }
 

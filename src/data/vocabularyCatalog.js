@@ -31,4 +31,36 @@ export const vocabularyCatalog = Object.freeze({
     difficulty: 1,
     tags: ['daily-life'],
   },
+  vocab_003: {
+    id: 'vocab_003',
+    term: 'elephant',
+    translation: {
+      vi: 'con voi',
+      en: 'elephant',
+    },
+    pronunciation: '/ˈɛlɪfənt/',
+    partOfSpeech: 'noun',
+    example: {
+      vi: 'Con voi rất to.',
+      en: 'The elephant is very big.',
+    },
+    difficulty: 1,
+    tags: ['animal'],
+  },
+  vocab_004: {
+    id: 'vocab_004',
+    term: 'school',
+    translation: {
+      vi: 'trường học',
+      en: 'school',
+    },
+    pronunciation: '/skuːl/',
+    partOfSpeech: 'noun',
+    example: {
+      vi: 'Tôi đi học mỗi ngày.',
+      en: 'I go to school every day.',
+    },
+    difficulty: 1,
+    tags: ['daily-life'],
+  },
 });

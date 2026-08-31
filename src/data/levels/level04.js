@@ -2,6 +2,7 @@ export const level04 = Object.freeze({
   id: 'level04',
   name: 'Sentence Builder',
   timeLimit: 48,
+  targetSequence: ['vocab_002', 'vocab_001', 'vocab_002', 'vocab_001', 'vocab_002'],
   spawnPoints: [
     { x: 360, y: 350 },
     { x: 520, y: 450 },

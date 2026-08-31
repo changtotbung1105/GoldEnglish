@@ -2,6 +2,7 @@ export const level05 = Object.freeze({
   id: 'level05',
   name: 'Final Mix',
   timeLimit: 45,
+  targetSequence: ['vocab_001', 'vocab_002', 'vocab_002', 'vocab_001', 'vocab_002'],
   spawnPoints: [
     { x: 330, y: 400 },
     { x: 500, y: 300 },

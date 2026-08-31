@@ -194,7 +194,7 @@ export class Hook extends Entity {
 
     ctx.save();
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 20;
     ctx.setLineDash([8, 8]);
     ctx.beginPath();
     ctx.moveTo(this.anchorX, this.anchorY);

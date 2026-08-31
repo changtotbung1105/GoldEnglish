@@ -7,6 +7,7 @@ export class LevelService {
     this.learning = learningService;
     this.state = gameStateService;
     this.currentLevel = null;
+    this.currentTargetIndex = 0;
   }
 
   loadLevel(levelId) {
@@ -16,8 +17,10 @@ export class LevelService {
     }
 
     this.currentLevel = level;
+    this.currentTargetIndex = 0;
     this.state.reset({ score: 0, timeLeft: level.timeLimit });
     this.eventBus.emit('level.loaded', { level });
+    this.eventBus.emit('level.target.changed', { target: this.getCurrentTarget() });
     return level;
   }
 
@@ -48,6 +51,35 @@ export class LevelService {
 
   getCurrentLevel() {
     return this.currentLevel;
+  }
+
+  getTargetSequence() {
+    return this.currentLevel?.targetSequence ?? [];
+  }
+
+  getCurrentTarget() {
+    const sequence = this.getTargetSequence();
+    const targetWordId = sequence[this.currentTargetIndex];
+    if (!targetWordId) {
+      return null;
+    }
+
+    return this.learning.getVocabulary(targetWordId);
+  }
+
+  advanceTarget() {
+    const sequence = this.getTargetSequence();
+    this.currentTargetIndex += 1;
+
+    if (this.currentTargetIndex >= sequence.length) {
+      this.eventBus.emit('level.target.changed', { target: null });
+      this.eventBus.emit('level.completed', { level: this.currentLevel });
+      return null;
+    }
+
+    const target = this.getCurrentTarget();
+    this.eventBus.emit('level.target.changed', { target });
+    return target;
   }
 
   getNextLevelId() {

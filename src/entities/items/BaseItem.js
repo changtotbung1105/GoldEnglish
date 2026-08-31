@@ -26,6 +26,7 @@ export class BaseItem extends Entity {
     this.floatSpeed = options.floatSpeed ?? 1.2;
     this.collectScale = 1;
     this.collectAlpha = 1;
+    this.collidable = true;
   }
 
   update(dt) {
