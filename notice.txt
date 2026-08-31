@@ -1,0 +1,23 @@
+THUAT NGU THONG NHAT
+
+ctx = canvas context, chi de ve
+hook = cai moc / can cau chinh
+idle motion = chuyen dong quay lai quay lui cua hook khi khong bam
+
+GAMEPLAY TERMS
+
+target meaning = nghia tieng Viet hien thi tren HUD
+target word = tu tieng Anh nguoi choi can bat dung
+decoy word = tu giai nhieu, khong phai dap an
+spawn arc = vung cung an toan de rai item
+spawn point = diem roi cua item
+round win = bat xong het target thi qua man
+wrong catch = bat sai van duoc, nhung khong cong diem
+manual aim = nguoi choi tu dieu khien bang phim hoac cham keo
+auto aim = tro giup quay vao goc phu hop khi khong dieu khien tay
+
+LEVEL DESIGN RULE
+
+level chi khai bao danh sach tu
+he thong se tu sinh vi tri trong spawn arc
+item phai nam trong tam bat duoc cua hook

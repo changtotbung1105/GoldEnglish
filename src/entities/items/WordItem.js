@@ -18,10 +18,10 @@ export class WordItem extends BaseItem {
     ctx.fillStyle = '#ffffff';
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.45)';
     ctx.lineWidth = 4;
-    ctx.font = 'bold 18px Arial';
+    ctx.font = 'bold 15px Arial';
     ctx.textAlign = 'center';
-    ctx.strokeText(label, this.x, this.y + 6);
-    ctx.fillText(label, this.x, this.y + 6);
+    ctx.strokeText(label, this.x, this.y + 22);
+    ctx.fillText(label, this.x, this.y + 22);
     ctx.restore();
   }
 }

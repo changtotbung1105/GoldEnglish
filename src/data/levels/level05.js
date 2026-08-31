@@ -1,20 +1,25 @@
 export const level05 = Object.freeze({
   id: 'level05',
-  name: 'Final Mix',
+  name: 'Vocabulary 5',
   timeLimit: 45,
-  targetSequence: ['vocab_001', 'vocab_002', 'vocab_002', 'vocab_001', 'vocab_002'],
-  spawnPoints: [
-    { x: 330, y: 400 },
-    { x: 500, y: 300 },
-    { x: 690, y: 470 },
-    { x: 880, y: 320 },
-    { x: 1060, y: 430 },
+  spawnMode: 'arc',
+  spawnArea: {
+    centerX: 640,
+    centerY: 190,
+    radiusMin: 230,
+    radiusMax: 430,
+    angleStart: Math.PI * 0.18,
+    angleEnd: Math.PI * 0.82,
+  },
+  targetSequence: [
+    'vocab_081', 'vocab_082', 'vocab_083', 'vocab_084', 'vocab_085',
+    'vocab_086', 'vocab_087', 'vocab_088', 'vocab_089', 'vocab_090',
+    'vocab_091', 'vocab_092', 'vocab_093', 'vocab_094', 'vocab_095',
+    'vocab_096', 'vocab_097', 'vocab_098', 'vocab_099', 'vocab_100',
   ],
-  items: [
-    { type: 'gold', spawnIndex: 0 },
-    { type: 'word', spawnIndex: 1, wordId: 'vocab_001' },
-    { type: 'bomb', spawnIndex: 2 },
-    { type: 'word', spawnIndex: 3, wordId: 'vocab_002' },
-    { type: 'gold', spawnIndex: 4 },
-  ],
+  items: Array.from({ length: 20 }, (_, index) => ({
+    type: 'word',
+    spawnIndex: index,
+    wordId: `vocab_${String(index + 81).padStart(3, '0')}`,
+  })),
 });

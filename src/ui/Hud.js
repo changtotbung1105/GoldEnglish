@@ -7,10 +7,12 @@ export class Hud {
     this.prompt = null;
     this.target = null;
     this.message = this.localization.t('hud.fire');
+    this.helpOpen = false;
     this.unsubscribe = [];
-    this.speakButton = { x: 40, y: 230, width: 130, height: 38 };
-    this.restartButton = { x: 190, y: 230, width: 130, height: 38 };
-    this.nextButton = { x: 340, y: 150, width: 130, height: 38 };
+    this.speakButton = { x: 0, y: 0, width: 82, height: 26 };
+    this.restartButton = { x: 0, y: 0, width: 82, height: 26 };
+    this.helpButton = { x: 0, y: 0, width: 56, height: 26 };
+    this.nextButton = { x: 0, y: 0, width: 64, height: 26 };
   }
 
   bind() {
@@ -25,7 +27,7 @@ export class Hud {
       this.game.eventBus.on('level.target.changed', ({ target }) => {
         this.target = target;
         this.message = target
-          ? `Catch this word: ${target.term}`
+          ? `Bắt: ${target.translation?.vi ?? target.term}`
           : 'Level complete. Click Next';
       })
     );
@@ -88,117 +90,85 @@ export class Hud {
   render(ctx) {
     const score = this.state.score;
     const timeLeft = this.state.timeLeft;
-    const isRoundOver = !this.state.roundActive;
-    const isCompact = this.game.width < 1000 || this.game.height < 700;
+    const targetText = this.target?.translation?.vi ?? '---';
+    const level = this.game.currentScene?.currentLevelId?.replace('level', '') ?? '1';
+    this.layoutButtons();
 
     ctx.save();
-    const panelWidth = isCompact ? this.game.width - 32 : 620;
-    const panelHeight = isCompact ? 220 : 180;
-    this.drawPanel(ctx, 16, 16, panelWidth, panelHeight);
+    const barHeight = 78;
+    ctx.fillStyle = 'rgba(245, 190, 58, 0.95)';
+    ctx.fillRect(0, 0, this.game.width, barHeight);
+    ctx.strokeStyle = '#8d6414';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(0, 0, this.game.width, barHeight);
 
-    ctx.fillStyle = '#f6e7c1';
-    ctx.font = '700 24px Arial';
-    ctx.fillText('Gold English', 32, 44);
+    ctx.fillStyle = '#7b5a14';
+    ctx.font = 'bold 18px Arial';
+    ctx.fillText(`Money: ${score}`, 18, 28);
+    ctx.fillText(`Goal: ${this.target ? 1 : 0}`, 18, 54);
 
-    const badgeW = isCompact ? 112 : 125;
-    const badgeGap = 10;
-    this.drawBadge(ctx, 32, 56, badgeW, 34, '#1f5f8b', `Score  ${score}`);
-    this.drawBadge(ctx, 32 + badgeW + badgeGap, 56, badgeW, 34, '#8a5f1f', `Time  ${Math.ceil(timeLeft)}`);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#7d2400';
+    ctx.font = 'bold 22px Arial';
+    ctx.fillText(targetText, this.game.width / 2, 46);
 
-    this.drawTargetCard(
-      ctx,
-      isCompact ? 32 : 32,
-      isCompact ? 108 : 108,
-      isCompact ? panelWidth - 64 : 330,
-      isCompact ? 78 : 72,
-      this.target
-    );
-
-    ctx.fillStyle = '#f9f0da';
-    ctx.font = isCompact ? '15px Arial' : '16px Arial';
-    ctx.fillText(this.message, isCompact ? 32 : 380, isCompact ? 140 : 136);
-
-    if (this.outcome) {
-      const outcomeColor = this.outcome.type === 'success' ? '#7CFF6B' : '#FF6B6B';
-      ctx.fillStyle = outcomeColor;
-      ctx.font = 'bold 20px Arial';
-      ctx.fillText(this.outcome.message, 32, isRoundOver ? (isCompact ? panelHeight - 18 : 162) : (isCompact ? 178 : 162));
-    }
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#7b5a14';
+    ctx.font = 'bold 18px Arial';
+    ctx.fillText(`Time: ${Math.ceil(timeLeft)}`, this.game.width - 18, 28);
+    ctx.fillText(`Level: ${level}`, this.game.width - 18, 54);
 
     this.drawButton(ctx, this.speakButton, 'Speak', '#2d7dd2');
     this.drawButton(ctx, this.restartButton, 'Restart', '#8c4a2f');
+    this.drawButton(ctx, this.helpButton, 'Help', '#8a6c18');
 
     if (this.state.roundResult === 'win') {
-      ctx.fillStyle = '#7CFF6B';
-      ctx.font = 'bold 20px Arial';
-      ctx.fillText('Level cleared! Click Next', 40, 214);
       this.drawButton(ctx, this.nextButton, 'Next', '#3c9d5d');
+      ctx.fillStyle = '#7d2400';
+      ctx.font = 'bold 16px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('Level cleared!', this.game.width / 2, 72);
+    }
+
+    if (this.helpOpen) {
+      this.drawHelpPanel(ctx);
+    }
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#fff7e8';
+    ctx.font = '14px Arial';
+    ctx.fillText(this.message, 18, barHeight + 20);
+
+    if (this.outcome) {
+      ctx.fillStyle = this.outcome.type === 'success' ? '#7cff6b' : '#ff6b6b';
+      ctx.font = 'bold 16px Arial';
+      ctx.fillText(this.outcome.message, 18, barHeight + 42);
     }
 
     ctx.restore();
   }
 
-  drawPanel(ctx, x, y, w, h) {
-    ctx.save();
-    ctx.fillStyle = 'rgba(9, 13, 20, 0.72)';
-    ctx.fillRect(x, y, w, h);
-    ctx.strokeStyle = 'rgba(255, 240, 200, 0.55)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(x, y, w, h);
-    ctx.fillStyle = 'rgba(255, 215, 125, 0.15)';
-    ctx.fillRect(x + 1, y + 1, w - 2, 12);
-    ctx.restore();
-  }
+  layoutButtons() {
+    const barY = 0;
+    const gap = 8;
+    const totalWidth =
+      this.speakButton.width +
+      this.restartButton.width +
+      this.helpButton.width +
+      gap * 2;
+    const startX = Math.round((this.game.width - totalWidth) / 2);
 
-  drawBadge(ctx, x, y, w, h, color, text) {
-    ctx.save();
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y, w, h);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(x, y, w, h);
-    ctx.fillStyle = '#fff7e8';
-    ctx.font = 'bold 16px Arial';
-    ctx.fillText(text, x + 12, y + 22);
-    ctx.restore();
-  }
+    this.speakButton.x = startX;
+    this.speakButton.y = barY;
 
-  drawPromptCard(ctx, x, y, w, h, prompt) {
-    ctx.save();
-    ctx.fillStyle = 'rgba(255, 248, 230, 0.92)';
-    ctx.fillRect(x, y, w, h);
-    ctx.strokeStyle = 'rgba(140, 92, 34, 0.75)';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(x, y, w, h);
-    ctx.fillStyle = '#3b2a18';
-    ctx.font = 'bold 18px Arial';
-    ctx.fillText(prompt.term, x + 12, y + 24);
-    ctx.font = '14px Arial';
-    ctx.fillText(prompt.pronunciation, x + 12, y + 46);
-    ctx.fillText(prompt.translation, x + 12, y + 66);
-    ctx.restore();
-  }
+    this.restartButton.x = this.speakButton.x + this.speakButton.width + gap;
+    this.restartButton.y = barY;
 
-  drawTargetCard(ctx, x, y, w, h, target) {
-    ctx.save();
-    ctx.fillStyle = 'rgba(255, 248, 230, 0.96)';
-    ctx.fillRect(x, y, w, h);
-    ctx.strokeStyle = 'rgba(140, 92, 34, 0.75)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(x, y, w, h);
+    this.helpButton.x = this.restartButton.x + this.restartButton.width + gap;
+    this.helpButton.y = barY;
 
-    ctx.fillStyle = '#7b4a11';
-    ctx.font = 'bold 14px Arial';
-    ctx.fillText('NGHIA TIENG VIET', x + 14, y + 20);
-
-    ctx.fillStyle = '#2b1c10';
-    ctx.font = 'bold 28px Arial';
-    ctx.fillText(target?.translation?.vi ?? '---', x + 14, y + 50);
-
-    ctx.font = '14px Arial';
-    ctx.fillStyle = '#6d4b23';
-    ctx.fillText(target ? `${target.term}  |  ${target.pronunciation}` : 'Cho muc tieu tiep theo', x + 14, y + 68);
-    ctx.restore();
+    this.nextButton.x = this.helpButton.x + this.helpButton.width + gap;
+    this.nextButton.y = barY;
   }
 
   drawButton(ctx, rect, label, fillStyle) {
@@ -209,8 +179,37 @@ export class Hud {
     ctx.lineWidth = 2;
     ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
     ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 14px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, rect.x + rect.width / 2, rect.y + rect.height / 2 + 1);
+    ctx.restore();
+  }
+
+  drawHelpPanel(ctx) {
+    const x = 30;
+    const y = 92;
+    const w = 440;
+    const h = 156;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(18, 22, 30, 0.92)';
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = 'rgba(255, 214, 122, 0.7)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, w, h);
+
+    ctx.fillStyle = '#fff3cc';
     ctx.font = 'bold 18px Arial';
-    ctx.fillText(label, rect.x + 28, rect.y + 25);
+    ctx.fillText('How to play', x + 16, y + 26);
+
+    ctx.fillStyle = '#f9f0da';
+    ctx.font = '14px Arial';
+    ctx.fillText('1. Read the Vietnamese meaning on the top bar.', x + 16, y + 54);
+    ctx.fillText('2. Rotate the hook with Arrow Left / Right or drag.', x + 16, y + 78);
+    ctx.fillText('3. Catch the English word that matches the meaning.', x + 16, y + 102);
+    ctx.fillText('4. Wrong catch is allowed, but it gives no score.', x + 16, y + 126);
+    ctx.fillText('5. Press Space to fire the hook.', x + 16, y + 150);
     ctx.restore();
   }
 
@@ -242,6 +241,20 @@ export class Hud {
       y >= nextButton.y &&
       y <= nextButton.y + nextButton.height
     );
+  }
+
+  isInsideHelpButton(x, y) {
+    const { helpButton } = this;
+    return (
+      x >= helpButton.x &&
+      x <= helpButton.x + helpButton.width &&
+      y >= helpButton.y &&
+      y <= helpButton.y + helpButton.height
+    );
+  }
+
+  toggleHelp() {
+    this.helpOpen = !this.helpOpen;
   }
 
   destroy() {

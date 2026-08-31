@@ -29,15 +29,19 @@ export class LevelService {
       return [];
     }
 
+    const placedPositions = [];
+    const spawnPoints = this.resolveSpawnPoints(this.currentLevel);
+
     return this.currentLevel.items.map((definition) => {
-      const spawnPoint = this.currentLevel.spawnPoints[definition.spawnIndex];
+      const spawnPoint = spawnPoints[definition.spawnIndex];
       if (!spawnPoint) {
         throw new Error(`Missing spawn point index ${definition.spawnIndex}`);
       }
 
+      const adjustedPoint = this.findFreeSpawnPoint(spawnPoint, placedPositions, 150);
       const item = ItemFactory.create(definition.type, {
-        x: spawnPoint.x,
-        y: spawnPoint.y,
+        x: adjustedPoint.x,
+        y: adjustedPoint.y,
         wordId: definition.wordId,
       });
 
@@ -45,8 +49,68 @@ export class LevelService {
         this.learning.attachWordItem(item);
       }
 
+      placedPositions.push({ x: item.x, y: item.y });
+
       return item;
     });
+  }
+
+  resolveSpawnPoints(level) {
+    if (Array.isArray(level.spawnPoints) && level.spawnPoints.length > 0) {
+      return level.spawnPoints;
+    }
+
+    if (level.spawnMode === 'arc') {
+      return this.generateArcSpawnPoints(level.items.length, level.spawnArea);
+    }
+
+    throw new Error(`Level ${level.id} has no spawnPoints or supported spawnMode`);
+  }
+
+  generateArcSpawnPoints(count, area = {}) {
+    const centerX = area.centerX ?? 640;
+    const centerY = area.centerY ?? 150;
+    const radiusMin = area.radiusMin ?? 260;
+    const radiusMax = area.radiusMax ?? 430;
+    const angleStart = area.angleStart ?? Math.PI * 0.18;
+    const angleEnd = area.angleEnd ?? Math.PI * 0.82;
+    const points = [];
+
+    for (let i = 0; i < count; i += 1) {
+      const t = count <= 1 ? 0.5 : i / (count - 1);
+      const angleJitter = (Math.random() * 0.14 - 0.07) * Math.PI;
+      const radiusJitter = Math.random() * 40 - 20;
+      const angle = angleStart + (angleEnd - angleStart) * t + angleJitter;
+      const radius = radiusMin + (radiusMax - radiusMin) * (0.35 + Math.random() * 0.55) + radiusJitter;
+      points.push({
+        x: centerX + Math.cos(angle) * radius,
+        y: centerY + Math.sin(angle) * radius,
+      });
+    }
+
+    return points;
+  }
+
+  findFreeSpawnPoint(spawnPoint, placedPositions, minDistance) {
+    const result = { x: spawnPoint.x, y: spawnPoint.y };
+    let attempts = 0;
+
+    while (attempts < 12) {
+      const isTooClose = placedPositions.some((placed) => {
+        const distance = Math.hypot(result.x - placed.x, result.y - placed.y);
+        return distance < minDistance;
+      });
+
+      if (!isTooClose) {
+        return result;
+      }
+
+      result.x += 120;
+      result.y += attempts % 2 === 0 ? -60 : 60;
+      attempts += 1;
+    }
+
+    return result;
   }
 
   getCurrentLevel() {

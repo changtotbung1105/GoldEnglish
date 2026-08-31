@@ -135,13 +135,24 @@ export class PlaygroundScene extends Scene {
         const nextLevelId = this.levels?.getNextLevelId();
         if (nextLevelId) {
           this.currentLevelId = nextLevelId;
-          this.game.changeScene('PlaygroundScene');
+          this.game.requestSceneChange('PlaygroundScene');
         }
         return;
       }
 
       if (this.hud.isInsideRestartButton(x, y)) {
-        this.game.changeScene('PlaygroundScene');
+        this.game.requestSceneChange('PlaygroundScene');
+        return;
+      }
+
+      if (this.hud.isInsideHelpButton(x, y)) {
+        this.hud.toggleHelp();
+        return;
+      }
+
+      if (this.hud.isInsideSpeakButton(x, y) && this.learning.getCurrentPrompt()) {
+        this.voice?.setTarget(this.learning.getCurrentPrompt());
+        this.voice?.start();
         return;
       }
     }
@@ -201,14 +212,6 @@ export class PlaygroundScene extends Scene {
       this.voice?.start();
     }
 
-    if (this.game.input.pointer.clicked && this.learning.getCurrentPrompt() && this.hud) {
-      const { x, y } = this.game.input.pointer;
-      if (this.hud.isInsideSpeakButton(x, y)) {
-        this.voice?.setTarget(this.learning.getCurrentPrompt());
-        this.voice?.start();
-      }
-    }
-
     if (this.hook.state === 'extending') {
       for (const item of this.items) {
         if (!item.active || item.attached || item.collidable === false) continue;
@@ -245,18 +248,23 @@ export class PlaygroundScene extends Scene {
       const isCorrect = !!correctTarget && item.wordId === correctTarget.id;
 
       if (isCorrect) {
-        this.learning.onItemCollected(item);
-        this.state.addScore(item.value);
-        this.state.setOutcome('success', `Correct: ${correctTarget.term}`);
-        this.hudMessage = `Correct: ${correctTarget.term}`;
-        this.currentTarget = this.levels.advanceTarget();
-        this.collectedItems += 1;
+          this.learning.onItemCollected(item);
+          this.state.addScore(item.value);
+          this.state.setOutcome('success', `Correct: ${correctTarget.term}`);
+          this.hudMessage = `Correct: ${correctTarget.term}`;
+          this.currentTarget = this.levels.advanceTarget();
+          this.collectedItems += 1;
+
+        if (!this.currentTarget && this.state.roundActive) {
+          this.state.endRound('win', 'All target words cleared!');
+          this.hudMessage = 'All target words cleared! Click Next';
+        }
+
         return true;
       } else {
         this.state.setOutcome('danger', `Wrong word: ${item.displayWord ?? item.wordId}`);
         this.hudMessage = `Wrong! Need: ${correctTarget?.term ?? '---'}`;
-        item.collidable = false;
-        return false;
+        return true;
       }
     } else if (item.type === 'gold') {
       this.state.addScore(item.value);
@@ -271,11 +279,6 @@ export class PlaygroundScene extends Scene {
       return false;
     }
 
-    if (!this.currentTarget && this.state.roundActive) {
-      this.state.endRound('win', 'All target words cleared!');
-      this.hudMessage = 'All target words cleared! Click Next';
-    }
-
     return false;
   }
 
@@ -283,8 +286,5 @@ export class PlaygroundScene extends Scene {
     this.hud?.render(ctx);
     this.mobileControls?.render(ctx);
     this.mobileTutorial?.render(ctx, this.game.width, this.game.height);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '18px Arial';
-    ctx.fillText(`EN preview: ${enLocale['hud.fire']}`, 40, 190);
   }
 }

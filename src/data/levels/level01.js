@@ -1,18 +1,25 @@
 export const level01 = Object.freeze({
   id: 'level01',
-  name: 'Travel Basics',
+  name: 'Vocabulary 1',
   timeLimit: 60,
-  targetSequence: ['vocab_001', 'vocab_002', 'vocab_003', 'vocab_004'],
-  spawnPoints: [
-    { x: 480, y: 430 },
-    { x: 680, y: 500 },
-    { x: 850, y: 430 },
-    { x: 570, y: 580 },
+  spawnMode: 'arc',
+  spawnArea: {
+    centerX: 640,
+    centerY: 190,
+    radiusMin: 230,
+    radiusMax: 430,
+    angleStart: Math.PI * 0.18,
+    angleEnd: Math.PI * 0.82,
+  },
+  targetSequence: [
+    'vocab_001', 'vocab_002', 'vocab_003', 'vocab_004', 'vocab_005',
+    'vocab_006', 'vocab_007', 'vocab_008', 'vocab_009', 'vocab_010',
+    'vocab_011', 'vocab_012', 'vocab_013', 'vocab_014', 'vocab_015',
+    'vocab_016', 'vocab_017', 'vocab_018', 'vocab_019', 'vocab_020',
   ],
-  items: [
-    { type: 'word', spawnIndex: 0, wordId: 'vocab_001' },
-    { type: 'word', spawnIndex: 1, wordId: 'vocab_002' },
-    { type: 'word', spawnIndex: 2, wordId: 'vocab_003' },
-    { type: 'word', spawnIndex: 3, wordId: 'vocab_004' },
-  ],
+  items: Array.from({ length: 20 }, (_, index) => ({
+    type: 'word',
+    spawnIndex: index,
+    wordId: `vocab_${String(index + 1).padStart(3, '0')}`,
+  })),
 });

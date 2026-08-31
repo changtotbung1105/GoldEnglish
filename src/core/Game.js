@@ -24,6 +24,7 @@ export class Game {
     this.scenes = new Map();
     this.currentScene = null;
     this.isRunning = false;
+    this.pendingSceneName = null;
 
     this.input.setViewport(this.viewport);
     this.viewport.resize();
@@ -67,10 +68,20 @@ export class Game {
     }
   }
 
+  requestSceneChange(sceneName) {
+    this.pendingSceneName = sceneName;
+  }
+
   loop(now) {
     if (!this.isRunning) return;
 
     const dt = this.timer.tick(now);
+
+    if (this.pendingSceneName) {
+      const nextSceneName = this.pendingSceneName;
+      this.pendingSceneName = null;
+      this.changeScene(nextSceneName);
+    }
 
     if (this.currentScene?.update) {
       this.currentScene.update(dt);
