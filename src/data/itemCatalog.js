@@ -1,0 +1,32 @@
+export const itemCatalog = Object.freeze({
+  gold: {
+    type: 'gold',
+    spriteKey: 'item.gold',
+    width: 36,
+    height: 36,
+    value: 10,
+    weight: 1,
+    color: '#d9b44a',
+    labelKey: 'item.gold',
+  },
+  bomb: {
+    type: 'bomb',
+    spriteKey: 'item.bomb',
+    width: 34,
+    height: 34,
+    value: -20,
+    weight: 1,
+    color: '#c84c4c',
+    labelKey: 'item.bomb',
+  },
+  word: {
+    type: 'word',
+    spriteKey: 'item.word',
+    width: 40,
+    height: 40,
+    value: 15,
+    weight: 1,
+    color: '#4c8dc8',
+    labelKey: 'item.word',
+  },
+});

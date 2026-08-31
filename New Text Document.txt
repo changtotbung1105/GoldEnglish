@@ -1,0 +1,82 @@
+Kiến trúc đề xuất
+- src/core
+  - Lõi của game: vòng lặp, scene/state, event bus, asset loader, input, timer.
+  - Đây là nơi chứa các module hạ tầng, không chứa logic gameplay cụ thể.
+- src/entities
+  - Tất cả object trong game:
+    - GameObject
+    - Hook
+    - GoldItem
+    - BombItem
+    - WordItem
+  - Mỗi entity chỉ làm đúng một việc.
+- src/interfaces
+  - Các hành vi nhỏ theo ISP:
+    - Renderable
+    - Updatable
+    - Movable
+    - Collidable
+    - VoiceInteractive
+  - Dùng để ghép hành vi thay vì để class phình to.
+- src/systems
+  - Các hệ thống quản lý:
+    - render system
+    - collision system
+    - spawn system
+    - scoring system
+    - voice/learning system
+  - Đây là nơi xử lý logic cấp cao, không phụ thuộc trực tiếp vào chi tiết từng object.
+- src/scenes
+  - Chia game thành các scene/state:
+    - BootScene
+    - PreloadScene
+    - MenuScene
+    - GameScene
+    - ResultScene
+  - Giúp flow rõ ràng, dễ test và dễ mở rộng.
+- src/ui
+  - Thành phần giao diện:
+    - score panel
+    - timer
+    - word prompt
+    - modal
+    - hud
+  - Tách UI ra khỏi gameplay.
+- src/data
+  - Dữ liệu tĩnh:
+    - level config
+    - vocabulary list
+    - item definitions
+    - tuning config
+- src/config
+  - Cấu hình chung:
+    - canvas size
+    - FPS
+    - constants
+    - key bindings
+    - game tuning values
+- src/utils
+  - Hàm tiện ích dùng chung:
+    - math helpers
+    - random helpers
+    - id generator
+    - clamp, lerp, etc.
+- assets
+  - hình ảnh, âm thanh, font, JSON dữ liệu.
+Nguyên tắc thiết kế
+- Game không biết chi tiết từng item.
+- Scene điều phối, không tự xử lý mọi thứ.
+- Entity chỉ giữ trạng thái và hành vi của chính nó.
+- System xử lý logic chung.
+- EventBus dùng để giao tiếp giữa các module, giảm phụ thuộc.
+- Khi có item mới như GrammarCrystal hay PronunciationBomb, chỉ cần thêm class mới, không phá cấu trúc cũ.
+Luồng phát triển sau Step 1
+1. Chốt cấu trúc thư mục.
+2. Tạo bộ khung core.
+3. Tạo base GameObject và interfaces.
+4. Làm hook mechanism.
+5. Làm item system.
+6. Gắn learning/English layer.
+7. Làm UI, score, audio.
+8. Hoàn thiện game loop và balancing.
+Nếu bạn đồng ý, ở Step 2 tôi sẽ bắt đầu dựng bộ khung core đầu tiên và đưa luôn cấu trúc file cụ thể để bạn ghép vào dự án.
