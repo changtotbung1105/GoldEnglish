@@ -264,6 +264,12 @@ export class PlaygroundScene extends Scene {
       } else {
         this.state.setOutcome('danger', `Wrong word: ${item.displayWord ?? item.wordId}`);
         this.hudMessage = `Wrong! Need: ${correctTarget?.term ?? '---'}`;
+        if (this.hud) {
+          this.hud.target = correctTarget ?? null;
+          this.hud.message = correctTarget
+            ? `Bắt: ${correctTarget.translation?.vi ?? correctTarget.term}`
+            : 'Level complete. Click Next';
+        }
         return true;
       }
     } else if (item.type === 'gold') {

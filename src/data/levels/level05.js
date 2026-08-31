@@ -12,14 +12,12 @@ export const level05 = Object.freeze({
     angleEnd: Math.PI * 0.82,
   },
   targetSequence: [
-    'vocab_081', 'vocab_082', 'vocab_083', 'vocab_084', 'vocab_085',
-    'vocab_086', 'vocab_087', 'vocab_088', 'vocab_089', 'vocab_090',
-    'vocab_091', 'vocab_092', 'vocab_093', 'vocab_094', 'vocab_095',
-    'vocab_096', 'vocab_097', 'vocab_098', 'vocab_099', 'vocab_100',
+    'vocab_041', 'vocab_042', 'vocab_043', 'vocab_044', 'vocab_045',
+    'vocab_046', 'vocab_047', 'vocab_048', 'vocab_049', 'vocab_050',
   ],
-  items: Array.from({ length: 20 }, (_, index) => ({
+  items: Array.from({ length: 10 }, (_, index) => ({
     type: 'word',
     spawnIndex: index,
-    wordId: `vocab_${String(index + 81).padStart(3, '0')}`,
+    wordId: ['vocab_047', 'vocab_041', 'vocab_050', 'vocab_044', 'vocab_046', 'vocab_043', 'vocab_049', 'vocab_042', 'vocab_048', 'vocab_045'][index],
   })),
 });

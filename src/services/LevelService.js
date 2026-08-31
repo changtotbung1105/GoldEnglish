@@ -31,6 +31,7 @@ export class LevelService {
 
     const placedPositions = [];
     const spawnPoints = this.resolveSpawnPoints(this.currentLevel);
+    const spawnLimits = this.getSpawnLimits(this.currentLevel);
 
     return this.currentLevel.items.map((definition) => {
       const spawnPoint = spawnPoints[definition.spawnIndex];
@@ -38,7 +39,7 @@ export class LevelService {
         throw new Error(`Missing spawn point index ${definition.spawnIndex}`);
       }
 
-      const adjustedPoint = this.findFreeSpawnPoint(spawnPoint, placedPositions, 150);
+      const adjustedPoint = this.findFreeSpawnPoint(spawnPoint, placedPositions, 140, spawnLimits);
       const item = ItemFactory.create(definition.type, {
         x: adjustedPoint.x,
         y: adjustedPoint.y,
@@ -70,18 +71,19 @@ export class LevelService {
   generateArcSpawnPoints(count, area = {}) {
     const centerX = area.centerX ?? 640;
     const centerY = area.centerY ?? 150;
-    const radiusMin = area.radiusMin ?? 260;
+    const radiusMin = area.radiusMin ?? 230;
     const radiusMax = area.radiusMax ?? 430;
     const angleStart = area.angleStart ?? Math.PI * 0.18;
     const angleEnd = area.angleEnd ?? Math.PI * 0.82;
     const points = [];
+    const angleRange = angleEnd - angleStart;
+    const radiusSpan = radiusMax - radiusMin;
 
     for (let i = 0; i < count; i += 1) {
-      const t = count <= 1 ? 0.5 : i / (count - 1);
-      const angleJitter = (Math.random() * 0.14 - 0.07) * Math.PI;
-      const radiusJitter = Math.random() * 40 - 20;
-      const angle = angleStart + (angleEnd - angleStart) * t + angleJitter;
-      const radius = radiusMin + (radiusMax - radiusMin) * (0.35 + Math.random() * 0.55) + radiusJitter;
+      const t = count <= 1 ? 0.5 : (i + 0.5) / count;
+      const wave = Math.sin(t * Math.PI * 2) * 0.18;
+      const angle = angleStart + angleRange * t;
+      const radius = radiusMin + radiusSpan * (0.45 + wave * 0.5);
       points.push({
         x: centerX + Math.cos(angle) * radius,
         y: centerY + Math.sin(angle) * radius,
@@ -91,26 +93,82 @@ export class LevelService {
     return points;
   }
 
-  findFreeSpawnPoint(spawnPoint, placedPositions, minDistance) {
+  getSpawnLimits(level) {
+    const centerX = level.spawnArea?.centerX ?? 640;
+    const centerY = level.spawnArea?.centerY ?? 150;
+    const angleStart = level.spawnArea?.angleStart ?? Math.PI * 0.12;
+    const angleEnd = level.spawnArea?.angleEnd ?? Math.PI * 0.88;
+    const minRadius = level.spawnArea?.radiusMin ?? 220;
+    const maxRadius = Math.min(level.spawnArea?.radiusMax ?? 410, 430);
+
+    return {
+      centerX,
+      centerY,
+      angleStart,
+      angleEnd,
+      minRadius,
+      maxRadius,
+    };
+  }
+
+  isPointInsideSpawnLimits(point, limits) {
+    const dx = point.x - limits.centerX;
+    const dy = point.y - limits.centerY;
+    const angle = Math.atan2(dy, dx);
+    const normalizedAngle = angle < 0 ? angle + Math.PI * 2 : angle;
+    const radius = Math.hypot(dx, dy);
+    const withinAngle = normalizedAngle >= limits.angleStart && normalizedAngle <= limits.angleEnd;
+    const withinRadius = radius >= limits.minRadius && radius <= limits.maxRadius;
+    return withinAngle && withinRadius;
+  }
+
+  clampPointToSpawnLimits(point, limits) {
+    const dx = point.x - limits.centerX;
+    const dy = point.y - limits.centerY;
+    let angle = Math.atan2(dy, dx);
+    if (angle < 0) {
+      angle += Math.PI * 2;
+    }
+
+    angle = Math.max(limits.angleStart, Math.min(limits.angleEnd, angle));
+    const radius = Math.max(limits.minRadius, Math.min(limits.maxRadius, Math.hypot(dx, dy)));
+
+    return {
+      x: limits.centerX + Math.cos(angle) * radius,
+      y: limits.centerY + Math.sin(angle) * radius,
+    };
+  }
+
+  findFreeSpawnPoint(spawnPoint, placedPositions, minDistance, limits = null) {
     const result = { x: spawnPoint.x, y: spawnPoint.y };
     let attempts = 0;
 
-    while (attempts < 12) {
+    while (attempts < 6) {
       const isTooClose = placedPositions.some((placed) => {
         const distance = Math.hypot(result.x - placed.x, result.y - placed.y);
         return distance < minDistance;
       });
 
       if (!isTooClose) {
-        return result;
+        return limits ? this.clampPointToSpawnLimits(result, limits) : result;
       }
 
-      result.x += 120;
-      result.y += attempts % 2 === 0 ? -60 : 60;
+      const angleStep = Math.PI / 24;
+      const radiusStep = 10;
+      const angle = Math.atan2(result.y - limits.centerY, result.x - limits.centerX) + (attempts % 2 === 0 ? angleStep : -angleStep);
+      const radius = Math.hypot(result.x - limits.centerX, result.y - limits.centerY) + radiusStep;
+      result.x = limits.centerX + Math.cos(angle) * radius;
+      result.y = limits.centerY + Math.sin(angle) * radius;
+
+      if (limits && !this.isPointInsideSpawnLimits(result, limits)) {
+        const clamped = this.clampPointToSpawnLimits(result, limits);
+        result.x = clamped.x;
+        result.y = clamped.y;
+      }
       attempts += 1;
     }
 
-    return result;
+    return limits ? this.clampPointToSpawnLimits(result, limits) : result;
   }
 
   getCurrentLevel() {

@@ -86,11 +86,6 @@ export class BaseItem extends Entity {
     ctx.beginPath();
     ctx.arc(this.x - 6, this.y - 6, Math.max(this.width, this.height) / 5, 0, Math.PI * 2);
     ctx.fill();
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '12px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(this.type.toUpperCase(), this.x, this.y + 4);
     ctx.restore();
   }
 }
