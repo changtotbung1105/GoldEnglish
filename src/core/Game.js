@@ -4,6 +4,7 @@ import { InputManager } from './InputManager.js';
 import { AssetLoader } from './AssetLoader.js';
 import { EntityManager } from '../entities/EntityManager.js';
 import { RenderContext } from '../rendering/RenderContext.js';
+import { BackgroundRenderer } from '../rendering/BackgroundRenderer.js';
 
 export class Game {
   constructor({ canvas, width, height, scenes = [] }) {
@@ -17,6 +18,7 @@ export class Game {
     this.assets = new AssetLoader();
     this.entities = new EntityManager();
     this.renderer = new RenderContext(this);
+    this.background = new BackgroundRenderer();
     this.scenes = new Map();
     this.currentScene = null;
     this.isRunning = false;
@@ -73,6 +75,12 @@ export class Game {
     this.entities.update(dt);
 
     this.clear();
+
+    if (this.currentScene?.renderBackground) {
+      this.currentScene.renderBackground(this.context, this.background, this.timer.elapsedTime);
+    } else if (this.currentScene?.name) {
+      this.background.render(this.context, this.canvas.width, this.canvas.height, this.timer.elapsedTime);
+    }
 
     if (this.currentScene?.render) {
       this.currentScene.render(this.context);
