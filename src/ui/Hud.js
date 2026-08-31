@@ -78,66 +78,98 @@ export class Hud {
   render(ctx) {
     const score = this.state.score;
     const timeLeft = this.state.timeLeft;
+    const hasPrompt = !!this.prompt;
+    const isRoundOver = !this.state.roundActive;
 
     ctx.save();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
-    ctx.fillRect(24, 20, 520, 110);
+    this.drawPanel(ctx, 24, 20, 545, hasPrompt ? 170 : 140);
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '24px Arial';
-    ctx.fillText(`Score: ${score}`, 40, 52);
-    ctx.fillText(`Time: ${timeLeft}`, 40, 82);
+    ctx.fillStyle = '#f6e7c1';
+    ctx.font = '700 24px Arial';
+    ctx.fillText('Mission HUD', 40, 48);
 
-    ctx.font = '20px Arial';
-    ctx.fillText(this.message, 40, 112);
+    this.drawBadge(ctx, 40, 62, 125, 34, '#1f5f8b', `Score  ${score}`);
+    this.drawBadge(ctx, 176, 62, 125, 34, '#8a5f1f', `Time  ${Math.ceil(timeLeft)}`);
+
+    ctx.fillStyle = '#f9f0da';
+    ctx.font = '18px Arial';
+    ctx.fillText(this.message, 40, 122);
 
     if (this.prompt) {
-      ctx.font = '18px Arial';
-      ctx.fillText(`Prompt: ${this.prompt.term} ${this.prompt.pronunciation}`, 280, 52);
-      ctx.fillText(`Meaning: ${this.prompt.translation}`, 280, 82);
-      ctx.fillText(`Example: ${this.prompt.example}`, 280, 112);
+      this.drawPromptCard(ctx, 280, 42, 270, 90, this.prompt);
     }
 
     if (this.outcome) {
-      ctx.fillStyle = this.outcome.type === 'success' ? '#7CFF6B' : '#FF6B6B';
-      ctx.font = '22px Arial';
-      ctx.fillText(this.outcome.message, 40, 146);
+      const outcomeColor = this.outcome.type === 'success' ? '#7CFF6B' : '#FF6B6B';
+      ctx.fillStyle = outcomeColor;
+      ctx.font = 'bold 20px Arial';
+      ctx.fillText(this.outcome.message, 40, isRoundOver ? 188 : 152);
     }
 
-    ctx.fillStyle = '#ffffff';
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(
-      this.speakButton.x,
-      this.speakButton.y,
-      this.speakButton.width,
-      this.speakButton.height
-    );
-    ctx.font = '20px Arial';
-    ctx.fillText('Speak', this.speakButton.x + 28, this.speakButton.y + 26);
-
-    ctx.strokeRect(
-      this.restartButton.x,
-      this.restartButton.y,
-      this.restartButton.width,
-      this.restartButton.height
-    );
-    ctx.fillText('Restart', this.restartButton.x + 18, this.restartButton.y + 26);
+    this.drawButton(ctx, this.speakButton, 'Speak', '#2d7dd2');
+    this.drawButton(ctx, this.restartButton, 'Restart', '#8c4a2f');
 
     if (this.state.roundResult === 'win') {
       ctx.fillStyle = '#7CFF6B';
-      ctx.font = '22px Arial';
-      ctx.fillText('Level cleared! Click Next', 40, 172);
-
-      ctx.strokeRect(
-        this.nextButton.x,
-        this.nextButton.y,
-        this.nextButton.width,
-        this.nextButton.height
-      );
-      ctx.fillText('Next', this.nextButton.x + 40, this.nextButton.y + 26);
+      ctx.font = 'bold 20px Arial';
+      ctx.fillText('Level cleared! Click Next', 40, 214);
+      this.drawButton(ctx, this.nextButton, 'Next', '#3c9d5d');
     }
 
+    ctx.restore();
+  }
+
+  drawPanel(ctx, x, y, w, h) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(9, 13, 20, 0.72)';
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = 'rgba(255, 240, 200, 0.55)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, w, h);
+    ctx.fillStyle = 'rgba(255, 215, 125, 0.15)';
+    ctx.fillRect(x + 1, y + 1, w - 2, 12);
+    ctx.restore();
+  }
+
+  drawBadge(ctx, x, y, w, h, color, text) {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(x, y, w, h);
+    ctx.fillStyle = '#fff7e8';
+    ctx.font = 'bold 16px Arial';
+    ctx.fillText(text, x + 12, y + 22);
+    ctx.restore();
+  }
+
+  drawPromptCard(ctx, x, y, w, h, prompt) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(255, 248, 230, 0.92)';
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = 'rgba(140, 92, 34, 0.75)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(x, y, w, h);
+    ctx.fillStyle = '#3b2a18';
+    ctx.font = 'bold 18px Arial';
+    ctx.fillText(prompt.term, x + 12, y + 24);
+    ctx.font = '14px Arial';
+    ctx.fillText(prompt.pronunciation, x + 12, y + 46);
+    ctx.fillText(prompt.translation, x + 12, y + 66);
+    ctx.restore();
+  }
+
+  drawButton(ctx, rect, label, fillStyle) {
+    ctx.save();
+    ctx.fillStyle = fillStyle;
+    ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 18px Arial';
+    ctx.fillText(label, rect.x + 28, rect.y + 25);
     ctx.restore();
   }
 

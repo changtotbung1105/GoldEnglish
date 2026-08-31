@@ -23,6 +23,8 @@ export class Hook extends Entity {
     this.pullSpeed = options.pullSpeed ?? 260;
     this.retractSpeed = options.retractSpeed ?? 520;
     this.maxLength = options.maxLength ?? 560;
+    this.chainWobble = 0;
+    this.tipPulse = 0;
     this.state = HookState.IDLE;
     this.angle = options.angle ?? Math.PI / 2;
     this.direction = 1;
@@ -95,6 +97,8 @@ export class Hook extends Entity {
 
   updateExtending(dt) {
     this.length += this.reachSpeed * dt;
+    this.chainWobble = Math.min(1, this.chainWobble + dt * 5);
+    this.tipPulse = Math.min(1, this.tipPulse + dt * 6);
 
     if (this.length >= this.maxLength) {
       this.length = this.maxLength;
@@ -111,6 +115,8 @@ export class Hook extends Entity {
     const hookTip = this.getTipPosition();
     this.carrying.x = hookTip.x;
     this.carrying.y = hookTip.y;
+    this.chainWobble = Math.min(1, this.chainWobble + dt * 4);
+    this.tipPulse = Math.max(0.2, this.tipPulse - dt * 2.5);
 
     this.length -= this.pullSpeed * dt;
     if (this.length <= 0) {
@@ -122,6 +128,8 @@ export class Hook extends Entity {
 
   updateRetracting(dt) {
     this.length -= this.retractSpeed * dt;
+    this.chainWobble = Math.max(0, this.chainWobble - dt * 4.5);
+    this.tipPulse = Math.max(0, this.tipPulse - dt * 3);
     if (this.length <= 0) {
       this.length = 0;
       this.state = HookState.IDLE;
@@ -130,6 +138,8 @@ export class Hook extends Entity {
 
   fire() {
     if (this.state === HookState.IDLE) {
+      this.chainWobble = 0;
+      this.tipPulse = 0.1;
       this.state = HookState.EXTENDING;
       return true;
     }
@@ -179,6 +189,8 @@ export class Hook extends Entity {
       x: this.anchorX + Math.cos(this.angle) * this.maxLength,
       y: this.anchorY + Math.sin(this.angle) * this.maxLength,
     };
+    const wobbleAmount = this.chainWobble * 4;
+    const headRadius = 10 + this.tipPulse * 3;
 
     ctx.save();
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
@@ -201,11 +213,16 @@ export class Hook extends Entity {
 
     if (!chainImage) {
       ctx.strokeStyle = '#f2d16b';
-      ctx.lineWidth = 8;
+      ctx.lineWidth = 8 + wobbleAmount * 0.35;
       ctx.lineCap = 'round';
       ctx.beginPath();
       ctx.moveTo(this.anchorX, this.anchorY);
-      ctx.lineTo(tip.x, tip.y);
+      ctx.quadraticCurveTo(
+        (this.anchorX + tip.x) / 2 + Math.sin(this.angle + this.length * 0.01) * wobbleAmount,
+        (this.anchorY + tip.y) / 2,
+        tip.x,
+        tip.y
+      );
       ctx.stroke();
     }
 
@@ -221,7 +238,7 @@ export class Hook extends Entity {
     if (!headImage) {
       ctx.fillStyle = '#d7b24a';
       ctx.beginPath();
-      ctx.arc(tip.x, tip.y, 10, 0, Math.PI * 2);
+      ctx.arc(tip.x, tip.y, headRadius, 0, Math.PI * 2);
       ctx.fill();
     }
 
