@@ -1,4 +1,4 @@
-import { Scene } from './Scene.js';
+﻿import { Scene } from './Scene.js';
 import { Hook } from '../entities/Hook.js';
 import { CollisionSystem } from '../systems/CollisionSystem.js';
 import { viLocale } from '../data/locales/vi.js';
@@ -33,6 +33,9 @@ export class PlaygroundScene extends Scene {
     this.currentLevelId = 'level01';
     this.currentTarget = null;
     this.levelTargetOff = null;
+    this.wrongAttempts = 0;
+    this.roundLocked = false;
+    this.maxWrongAttempts = 0;
   }
 
   enter() {
@@ -49,6 +52,7 @@ export class PlaygroundScene extends Scene {
       }
     });
     this.levels.loadLevel(this.currentLevelId);
+    this.maxWrongAttempts = this.levels.getCurrentLevel()?.maxWrongAttempts ?? 0;
 
     this.hook = new Hook({
       x: 640,
@@ -66,6 +70,9 @@ export class PlaygroundScene extends Scene {
     this.entities.add(this.hook);
     this.spawnLevelItems();
     this.hudMessage = this.localization.t('hud.fire');
+    this.wrongAttempts = 0;
+    this.roundLocked = false;
+    this.maxWrongAttempts = this.levels.getCurrentLevel()?.maxWrongAttempts ?? 0;
     this.hud = new Hud(this.game, this.localization, this.state, this.learning);
     this.hud.bind();
     this.hud.target = this.currentTarget;
@@ -87,6 +94,9 @@ export class PlaygroundScene extends Scene {
     this.items = [];
     this.totalItems = 0;
     this.collectedItems = 0;
+    this.wrongAttempts = 0;
+    this.roundLocked = false;
+    this.maxWrongAttempts = 0;
     this.learning = null;
     this.localization = null;
     this.levels = null;
@@ -243,41 +253,53 @@ export class PlaygroundScene extends Scene {
   }
 
   handleCollectedItem(item) {
+    if (this.roundLocked || !this.state?.roundActive) {
+      return false;
+    }
+
     if (item.type === 'word') {
       const correctTarget = this.currentTarget;
       const isCorrect = !!correctTarget && item.wordId === correctTarget.id;
 
       if (isCorrect) {
-          this.learning.onItemCollected(item);
-          this.state.addScore(item.value);
-          this.state.setOutcome('success', `Correct: ${correctTarget.term}`);
-          this.hudMessage = `Correct: ${correctTarget.term}`;
-          this.currentTarget = this.levels.advanceTarget();
-          this.collectedItems += 1;
+        this.learning.onItemCollected(item);
+        this.state.addScore(item.value);
+        this.state.setOutcome('success', `Correct: ${correctTarget.term}`);
+        this.hudMessage = `Correct: ${correctTarget.term}`;
+        this.currentTarget = this.levels.advanceTarget();
+        this.collectedItems += 1;
 
         if (!this.currentTarget && this.state.roundActive) {
-          this.state.endRound('win', 'All target words cleared!');
-          this.hudMessage = 'All target words cleared! Click Next';
+          this.state.endRound('win', 'Goal reached! Press Next');
+          this.hudMessage = 'Goal reached! Press Next';
         }
 
         return true;
-      } else {
-        this.state.setOutcome('danger', `Wrong word: ${item.displayWord ?? item.wordId}`);
-        this.hudMessage = `Wrong! Need: ${correctTarget?.term ?? '---'}`;
-        if (this.hud) {
-          this.hud.target = correctTarget ?? null;
-          this.hud.message = correctTarget
-            ? `Bắt: ${correctTarget.translation?.vi ?? correctTarget.term}`
-            : 'Level complete. Click Next';
-        }
-        return true;
       }
-    } else if (item.type === 'gold') {
+
+      this.wrongAttempts += 1;
+      this.state.setOutcome('danger', `Wrong word: ${item.displayWord ?? item.wordId}`);
+      this.hudMessage = `Wrong! Need: ${correctTarget?.term ?? '---'}`;
+      if (this.wrongAttempts > this.maxWrongAttempts && this.state.roundActive) {
+        this.state.endRound('lose', 'Too many wrong words. Restart required!');
+        this.hudMessage = 'Too many wrong words. Press Restart';
+        this.roundLocked = true;
+        if (this.hook) {
+          this.hook.state = 'retracting';
+          this.hook.carrying = null;
+        }
+      }
+      return false;
+    }
+
+    if (item.type === 'gold') {
       this.state.addScore(item.value);
       this.state.setOutcome('success', `+${item.value} Gold`);
       this.hudMessage = 'Gold collected';
       return false;
-    } else if (item.type === 'bomb') {
+    }
+
+    if (item.type === 'bomb') {
       this.state.addScore(item.value);
       this.state.setOutcome('danger', 'Boom! Bomb hit');
       this.hudMessage = 'Avoid bombs';
@@ -294,3 +316,4 @@ export class PlaygroundScene extends Scene {
     this.mobileTutorial?.render(ctx, this.game.width, this.game.height);
   }
 }
+

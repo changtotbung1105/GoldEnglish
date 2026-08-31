@@ -1,8 +1,9 @@
-import { level01 } from './levels/level01.js';
+﻿import { level01 } from './levels/level01.js';
 import { level02 } from './levels/level02.js';
 import { level03 } from './levels/level03.js';
 import { level04 } from './levels/level04.js';
 import { level05 } from './levels/level05.js';
+import { level06 } from './levels/level06.js';
 
 export const levelCatalog = Object.freeze({
   level01,
@@ -10,4 +11,6 @@ export const levelCatalog = Object.freeze({
   level03,
   level04,
   level05,
+  level06,
 });
+

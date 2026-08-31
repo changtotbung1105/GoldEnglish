@@ -2,6 +2,7 @@ export const level01 = Object.freeze({
   id: 'level01',
   name: 'Vocabulary 1',
   timeLimit: 60,
+  maxWrongAttempts: 5,
   spawnMode: 'arc',
   spawnArea: {
     centerX: 640,

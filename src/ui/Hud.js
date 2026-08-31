@@ -104,7 +104,7 @@ export class Hud {
 
     ctx.fillStyle = '#7b5a14';
     ctx.font = 'bold 18px Arial';
-    ctx.fillText(`Money: ${score}`, 18, 28);
+    ctx.fillText(`Score: ${score}`, 18, 28);
     ctx.fillText(`Goal: ${this.target ? 1 : 0}`, 18, 54);
 
     ctx.textAlign = 'center';
