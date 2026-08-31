@@ -17,6 +17,8 @@ export class Hook extends Entity {
     this.maxAngle = options.maxAngle ?? Math.PI * 0.9;
     this.angleSpeed = options.angleSpeed ?? 1.1;
     this.manualAngleSpeed = options.manualAngleSpeed ?? 1.8;
+    this.autoAimSpeed = options.autoAimSpeed ?? 0.8;
+    this.autoAimTargetAngle = null;
     this.reachSpeed = options.reachSpeed ?? 520;
     this.pullSpeed = options.pullSpeed ?? 260;
     this.retractSpeed = options.retractSpeed ?? 520;
@@ -47,7 +49,18 @@ export class Hook extends Entity {
   }
 
   updateIdle(dt) {
-    this.angle += this.direction * this.angleSpeed * dt;
+    if (this.autoAimTargetAngle !== null) {
+      const diff = this.autoAimTargetAngle - this.angle;
+      const step = Math.sign(diff) * this.autoAimSpeed * dt;
+      if (Math.abs(diff) <= Math.abs(step)) {
+        this.angle = this.autoAimTargetAngle;
+        this.autoAimTargetAngle = null;
+      } else {
+        this.angle += step;
+      }
+    } else {
+      this.angle += this.direction * this.angleSpeed * dt;
+    }
 
     if (this.angle >= this.maxAngle) {
       this.angle = this.maxAngle;
@@ -66,6 +79,14 @@ export class Hook extends Entity {
 
   setAngle(angle) {
     this.angle = this.clampAngle(angle);
+  }
+
+  setAutoAimTarget(angle) {
+    this.autoAimTargetAngle = this.clampAngle(angle);
+  }
+
+  clearAutoAimTarget() {
+    this.autoAimTargetAngle = null;
   }
 
   clampAngle(angle) {

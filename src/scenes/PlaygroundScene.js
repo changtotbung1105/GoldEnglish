@@ -119,12 +119,26 @@ export class PlaygroundScene extends Scene {
     this.state?.update(dt);
 
     if (this.hook.state === 'idle') {
-      if (this.game.input.isKeyDown('ArrowLeft')) {
+      const manualLeft = this.game.input.isKeyDown('ArrowLeft');
+      const manualRight = this.game.input.isKeyDown('ArrowRight');
+
+      if (manualLeft || manualRight) {
+        this.hook.clearAutoAimTarget();
+      }
+
+      if (manualLeft) {
         this.hook.adjustAngle(-this.hook.manualAngleSpeed * dt);
       }
 
-      if (this.game.input.isKeyDown('ArrowRight')) {
+      if (manualRight) {
         this.hook.adjustAngle(this.hook.manualAngleSpeed * dt);
+      }
+
+      if (!manualLeft && !manualRight && this.hook.autoAimTargetAngle === null) {
+        const targetAngle = this.findBestHookAngle();
+        if (targetAngle !== null) {
+          this.hook.setAutoAimTarget(targetAngle);
+        }
       }
     }
 
@@ -180,6 +194,39 @@ export class PlaygroundScene extends Scene {
         }
       }
     }
+  }
+
+  findBestHookAngle() {
+    const hookOrigin = { x: this.hook.anchorX, y: this.hook.anchorY };
+    let bestItem = null;
+    let bestDistance = Infinity;
+
+    for (const item of this.items) {
+      if (!item.active || item.attached) continue;
+
+      const dx = item.x - hookOrigin.x;
+      const dy = item.y - hookOrigin.y;
+      const angle = Math.atan2(dy, dx);
+      const normalized = angle < 0 ? angle + Math.PI * 2 : angle;
+      const clampedAngle = this.hook.clampAngle(normalized);
+      const aimX = hookOrigin.x + Math.cos(clampedAngle) * 1;
+      const aimY = hookOrigin.y + Math.sin(clampedAngle) * 1;
+      const distance = Math.hypot(item.x - aimX, item.y - aimY);
+
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestItem = item;
+      }
+    }
+
+    if (!bestItem) {
+      return null;
+    }
+
+    const dx = bestItem.x - hookOrigin.x;
+    const dy = bestItem.y - hookOrigin.y;
+    const targetAngle = Math.atan2(dy, dx);
+    return this.hook.clampAngle(targetAngle < 0 ? targetAngle + Math.PI * 2 : targetAngle);
   }
 
   render(ctx) {
