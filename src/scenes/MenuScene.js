@@ -16,12 +16,12 @@ export class MenuScene extends Scene {
       (pointer.clicked || pointer.pressed) &&
       this.isInsideStartButton(pointer.x, pointer.y)
     ) {
-      this.game.changeScene('PlaygroundScene');
+      this.game.changeScene('LevelIntroScene');
       return;
     }
 
     if (this.game.input.isKeyPressed('Enter')) {
-      this.game.changeScene('PlaygroundScene');
+      this.game.changeScene('LevelIntroScene');
     }
   }
 
@@ -49,21 +49,29 @@ export class MenuScene extends Scene {
   }
 
   drawTitle(ctx) {
+    const centerX = this.game.width / 2;
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
     ctx.fillStyle = '#fff3cc';
-    ctx.font = 'bold 58px Georgia';
-    ctx.fillText('Gold Miner', 430, 185);
+    ctx.font = 'bold 56px Georgia';
+    ctx.fillText('Gold Miner', centerX, 172);
+
     ctx.fillStyle = '#f6b94b';
-    ctx.font = 'bold 58px Georgia';
-    ctx.fillText('English', 645, 185);
+    ctx.font = 'bold 54px Georgia';
+    ctx.fillText('English', centerX, 230);
+
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
   }
 
   drawSubtitle(ctx) {
+    ctx.textAlign = 'center';
     ctx.fillStyle = 'rgba(255, 248, 230, 0.92)';
     ctx.font = '20px Arial';
-    ctx.fillText('Learn English by digging, aiming, and collecting.', 385, 238);
-    ctx.fillStyle = 'rgba(255, 248, 230, 0.72)';
-    ctx.font = '16px Arial';
-    ctx.fillText('A Canvas-based learning game with Gold Miner mechanics.', 385, 264);
+    ctx.fillText('Learn English through a fun, playful game.', this.game.width / 2, 300);
+    ctx.textAlign = 'left';
   }
 
   drawStartButton(ctx) {

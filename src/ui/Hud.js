@@ -199,8 +199,8 @@ export class Hud {
   drawHelpPanel(ctx) {
     const x = 30;
     const y = 92;
-    const w = 440;
-    const h = 156;
+    const w = 500;
+    const h = 182;
 
     ctx.save();
     ctx.fillStyle = 'rgba(18, 22, 30, 0.92)';
@@ -215,12 +215,33 @@ export class Hud {
 
     ctx.fillStyle = '#f9f0da';
     ctx.font = '14px Arial';
-    ctx.fillText('1. Read the Vietnamese meaning on the top bar.', x + 16, y + 54);
-    ctx.fillText('2. Rotate the hook with Arrow Left / Right or drag.', x + 16, y + 78);
-    ctx.fillText('3. Catch the English word that matches the meaning.', x + 16, y + 102);
-    ctx.fillText('4. Wrong catch is allowed, but it gives no score.', x + 16, y + 126);
-    ctx.fillText('5. Press Space to fire the hook.', x + 16, y + 150);
+    this.drawWrappedText(ctx, '1. Read the target word on the top bar.', x + 16, y + 54, w - 32, 18);
+    this.drawWrappedText(ctx, '2. Rotate the hook with Arrow Left / Right or drag.', x + 16, y + 82, w - 32, 18);
+    this.drawWrappedText(ctx, '3. Catch the animal image that matches the word.', x + 16, y + 110, w - 32, 18);
+    this.drawWrappedText(ctx, '4. Wrong catch is allowed, but it gives no score.', x + 16, y + 138, w - 32, 18);
+    this.drawWrappedText(ctx, '5. Press Space to fire the hook.', x + 16, y + 166, w - 32, 18);
     ctx.restore();
+  }
+
+  drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
+    const words = text.split(' ');
+    let line = '';
+    let offsetY = 0;
+
+    for (const word of words) {
+      const testLine = line ? `${line} ${word}` : word;
+      if (ctx.measureText(testLine).width > maxWidth && line) {
+        ctx.fillText(line, x, y + offsetY);
+        line = word;
+        offsetY += lineHeight;
+      } else {
+        line = testLine;
+      }
+    }
+
+    if (line) {
+      ctx.fillText(line, x, y + offsetY);
+    }
   }
 
   isInsideSpeakButton(x, y) {

@@ -14,6 +14,7 @@ export class Game {
     this.width = width;
     this.height = height;
     this.timer = new Timer();
+    this.settings = {};
     this.eventBus = new EventBus();
     this.input = new InputManager(canvas);
     this.assets = new AssetLoader();

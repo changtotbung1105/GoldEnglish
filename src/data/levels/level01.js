@@ -3,6 +3,8 @@ export const level01 = Object.freeze({
   name: 'Animals 1',
   timeLimit: 60,
   maxWrongAttempts: 3,
+  goalCount: 4,
+  totalCount: 6,
   spawnMode: 'arc',
   spawnArea: {
     centerX: 640,

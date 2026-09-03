@@ -33,7 +33,7 @@ export class GameStateService {
   setTimeLeft(timeLeft) {
     this.timeLeft = Math.max(0, timeLeft);
     if (this.timeLeft === 0) {
-      this.endRound('lose', 'Time is up!');
+      this.eventBus.emit('game.time.expired', this.getSnapshot());
     }
     this.eventBus.emit('game.time.changed', this.getSnapshot());
   }

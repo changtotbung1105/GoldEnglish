@@ -12,5 +12,12 @@ export const assetManifest = Object.freeze({
     'animal.pig': './assets/animals/pig.jfif',
     'animal.rabbit': './assets/animals/Rabbit.jfif',
     'animal.turtle': './assets/animals/turtle.jfif',
+    'birth.object_001': './assets/births/object_001.png',
+    'birth.object_002': './assets/births/object_002.png',
+    'birth.object_003': './assets/births/object_003.png',
+    'birth.object_004': './assets/births/object_004.png',
+    'birth.object_005': './assets/births/object_005.png',
+    'birth.object_006': './assets/births/object_006.png',
+    'birth.object_007': './assets/births/object_007.png',
   },
 });

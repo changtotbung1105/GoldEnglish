@@ -36,6 +36,7 @@ export class PlaygroundScene extends Scene {
     this.currentLevelId = 'level01';
     this.currentTarget = null;
     this.levelTargetOff = null;
+    this.timeExpiredOff = null;
     this.wrongAttempts = 0;
     this.roundLocked = false;
     this.maxWrongAttempts = 0;
@@ -44,6 +45,7 @@ export class PlaygroundScene extends Scene {
 
   enter() {
     this.languageCode = this.game.settings?.languageCode ?? localStorage.getItem('goldenglish.languageCode') ?? 'vi';
+    this.currentLevelId = this.game.settings.currentLevelId ?? this.currentLevelId ?? 'level01';
     this.localization = new LocalizationService(this.getLocaleByCode(this.languageCode), this.languageCode);
     this.learning = new LearningService(this.game.eventBus, this.localization);
     this.state = new GameStateService(this.game.eventBus);
@@ -55,6 +57,9 @@ export class PlaygroundScene extends Scene {
       if (this.hud) {
         this.hud.target = target;
       }
+    });
+    this.timeExpiredOff = this.game.eventBus.on('game.time.expired', () => {
+      this.resolveRoundAtTimeUp();
     });
     this.levels.loadLevel(this.currentLevelId);
     this.maxWrongAttempts = this.levels.getCurrentLevel()?.maxWrongAttempts ?? 0;
@@ -130,6 +135,10 @@ export class PlaygroundScene extends Scene {
       this.levelTargetOff();
       this.levelTargetOff = null;
     }
+    if (this.timeExpiredOff) {
+      this.timeExpiredOff();
+      this.timeExpiredOff = null;
+    }
   }
 
   spawnLevelItems() {
@@ -162,6 +171,7 @@ export class PlaygroundScene extends Scene {
         const nextLevelId = this.levels?.getNextLevelId();
         if (nextLevelId) {
           this.currentLevelId = nextLevelId;
+          this.game.settings.currentLevelId = nextLevelId;
           this.game.requestSceneChange('PlaygroundScene');
         }
         return;
@@ -257,6 +267,27 @@ export class PlaygroundScene extends Scene {
     }
   }
 
+  resolveRoundAtTimeUp() {
+    if (!this.state?.roundActive) {
+      return;
+    }
+
+    const level = this.levels?.getCurrentLevel();
+    const goalCount = level?.goalCount ?? this.levels?.getTargetSequence()?.length ?? 0;
+    const success = this.collectedItems >= goalCount;
+
+    this.state.endRound(
+      success ? 'win' : 'lose',
+      success
+        ? `Goal reached: ${this.collectedItems}/${goalCount}`
+        : `Need ${goalCount} words, got ${this.collectedItems}`
+    );
+
+    this.game.settings.lastRoundResult = success ? 'win' : 'lose';
+    this.game.settings.nextLevelId = this.levels?.getNextLevelId() ?? null;
+    this.game.requestSceneChange('LevelResultScene');
+  }
+
   getPointerAimAngle() {
     const pointer = this.game.input.pointer;
     const dx = pointer.x - this.hook.anchorX;
@@ -286,9 +317,13 @@ export class PlaygroundScene extends Scene {
         this.currentTarget = this.levels.advanceTarget();
         this.collectedItems += 1;
 
-        if (!this.currentTarget && this.state.roundActive) {
-          this.state.endRound('win', 'Goal reached! Press Next');
-          this.hudMessage = 'Goal reached! Press Next';
+        const level = this.levels?.getCurrentLevel();
+        const goalCount = level?.goalCount ?? this.levels?.getTargetSequence()?.length ?? 0;
+        if (this.collectedItems >= goalCount && this.state.roundActive) {
+          this.state.endRound('win', `Goal reached: ${this.collectedItems}/${goalCount}`);
+          this.game.settings.lastRoundResult = 'win';
+          this.game.settings.nextLevelId = this.levels?.getNextLevelId() ?? null;
+          this.game.requestSceneChange('LevelResultScene');
         }
 
         return true;
@@ -301,6 +336,9 @@ export class PlaygroundScene extends Scene {
         this.state.endRound('lose', 'Too many wrong words. Restart required!');
         this.hudMessage = 'Too many wrong words. Press Restart';
         this.roundLocked = true;
+        this.game.settings.lastRoundResult = 'lose';
+        this.game.settings.nextLevelId = this.levels?.getNextLevelId() ?? null;
+        this.game.requestSceneChange('LevelResultScene');
         if (this.hook) {
           this.hook.state = 'retracting';
           this.hook.carrying = null;
