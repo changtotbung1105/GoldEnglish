@@ -193,27 +193,25 @@ export class Hook extends Entity {
     const headRadius = 10 + this.tipPulse * 3;
 
     ctx.save();
-    if (this.state === HookState.IDLE) {
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
-      ctx.lineWidth = 20;
-      ctx.setLineDash([8, 8]);
-      ctx.beginPath();
-      ctx.moveTo(this.anchorX, this.anchorY);
-      ctx.lineTo(guideTip.x, guideTip.y);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+    ctx.lineWidth = 20;
+    ctx.setLineDash([8, 8]);
+    ctx.beginPath();
+    ctx.moveTo(this.anchorX, this.anchorY);
+    ctx.lineTo(guideTip.x, guideTip.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
 
-    const chainImage = this.game?.renderer?.drawImageByKey(
-      ctx,
-      'hook.chain',
-      (this.anchorX + tip.x) / 2,
-      (this.anchorY + tip.y) / 2,
-      Math.hypot(tip.x - this.anchorX, tip.y - this.anchorY),
-      8
-    );
-
-    if (!chainImage) {
+    const chainImage = this.game?.assets?.getImage('hook.chain');
+    if (chainImage) {
+      const chainLength = Math.hypot(tip.x - this.anchorX, tip.y - this.anchorY);
+      ctx.save();
+      ctx.translate(this.anchorX, this.anchorY);
+      ctx.rotate(this.angle);
+      ctx.globalAlpha = 0.95;
+      ctx.drawImage(chainImage, 0, -4, chainLength, 8);
+      ctx.restore();
+    } else {
       ctx.strokeStyle = '#f2d16b';
       ctx.lineWidth = 8 + wobbleAmount * 0.35;
       ctx.lineCap = 'round';

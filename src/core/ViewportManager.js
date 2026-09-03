@@ -14,26 +14,19 @@ export class ViewportManager {
     const scaleX = windowWidth / this.logicalWidth;
     const scaleY = windowHeight / this.logicalHeight;
     this.scale = Math.min(scaleX, scaleY);
-    const displayWidth = Math.floor(this.logicalWidth * this.scale);
-    const displayHeight = Math.floor(this.logicalHeight * this.scale);
-    this.offsetX = Math.floor((windowWidth - displayWidth) / 2);
-    this.offsetY = Math.floor((windowHeight - displayHeight) / 2);
+    this.offsetX = Math.floor((windowWidth - this.logicalWidth * this.scale) / 2);
+    this.offsetY = Math.floor((windowHeight - this.logicalHeight * this.scale) / 2);
 
-    const dpr = window.devicePixelRatio || 1;
-    this.canvas.width = Math.floor(displayWidth * dpr);
-    this.canvas.height = Math.floor(displayHeight * dpr);
-    this.canvas.style.width = `${displayWidth}px`;
-    this.canvas.style.height = `${displayHeight}px`;
+    this.canvas.width = this.logicalWidth;
+    this.canvas.height = this.logicalHeight;
+    this.canvas.style.width = `${this.logicalWidth}px`;
+    this.canvas.style.height = `${this.logicalHeight}px`;
     this.canvas.style.position = 'absolute';
     this.canvas.style.left = `${this.offsetX}px`;
     this.canvas.style.top = `${this.offsetY}px`;
+    this.canvas.style.transform = `scale(${this.scale})`;
+    this.canvas.style.transformOrigin = 'top left';
     this.canvas.style.padding = '0';
-
-    const ctx = this.canvas.getContext('2d');
-    if (ctx) {
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.imageSmoothingEnabled = true;
-    }
   }
 
   getBounds() {
