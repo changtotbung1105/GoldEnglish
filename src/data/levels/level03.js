@@ -1,8 +1,10 @@
 export const level03 = Object.freeze({
   id: 'level03',
-  name: 'Vocabulary 3',
+  name: 'Fruits 1',
   timeLimit: 50,
   maxWrongAttempts: 3,
+  goalCount: 7,
+  totalCount: 9,
   spawnMode: 'arc',
   spawnArea: {
     centerX: 640,
@@ -13,12 +15,12 @@ export const level03 = Object.freeze({
     angleEnd: Math.PI * 0.82,
   },
   targetSequence: [
-    'vocab_021', 'vocab_022', 'vocab_023', 'vocab_024', 'vocab_025',
-    'vocab_026', 'vocab_027', 'vocab_028', 'vocab_029', 'vocab_030',
+    'fruit_001', 'fruit_002', 'fruit_003', 'fruit_004', 'fruit_005',
+    'fruit_006', 'fruit_007', 'fruit_008', 'fruit_009',
   ],
-  items: Array.from({ length: 10 }, (_, index) => ({
+  items: Array.from({ length: 9 }, (_, index) => ({
     type: 'word',
     spawnIndex: index,
-    wordId: ['vocab_025', 'vocab_030', 'vocab_022', 'vocab_027', 'vocab_024', 'vocab_021', 'vocab_029', 'vocab_026', 'vocab_023', 'vocab_028'][index],
+    wordId: ['fruit_005', 'fruit_001', 'fruit_008', 'fruit_003', 'fruit_007', 'fruit_009', 'fruit_002', 'fruit_006', 'fruit_004'][index],
   })),
 });

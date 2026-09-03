@@ -317,13 +317,9 @@ export class PlaygroundScene extends Scene {
         this.currentTarget = this.levels.advanceTarget();
         this.collectedItems += 1;
 
-        const level = this.levels?.getCurrentLevel();
-        const goalCount = level?.goalCount ?? this.levels?.getTargetSequence()?.length ?? 0;
-        if (this.collectedItems >= goalCount && this.state.roundActive) {
-          this.state.endRound('win', `Goal reached: ${this.collectedItems}/${goalCount}`);
-          this.game.settings.lastRoundResult = 'win';
-          this.game.settings.nextLevelId = this.levels?.getNextLevelId() ?? null;
-          this.game.requestSceneChange('LevelResultScene');
+        const allItemsCollected = this.collectedItems >= this.totalItems;
+        if (allItemsCollected && this.state.roundActive) {
+          this.resolveRoundAtTimeUp();
         }
 
         return true;

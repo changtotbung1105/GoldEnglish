@@ -4,6 +4,7 @@ export class LevelResultScene extends Scene {
   constructor() {
     super('LevelResultScene');
     this.okButton = { x: 520, y: 490, width: 240, height: 68 };
+    this.replayOnlyButton = { x: 520, y: 490, width: 240, height: 68 };
   }
 
   update() {
@@ -19,7 +20,14 @@ export class LevelResultScene extends Scene {
   }
 
   goNext() {
+    const currentLevelId = this.game.settings.currentLevelId ?? 'level01';
+
     if (this.game.settings.lastRoundResult === 'win') {
+      if (currentLevelId === 'level03') {
+        this.game.requestSceneChange('PlaygroundScene');
+        return;
+      }
+
       if (this.game.settings.nextLevelId) {
         this.game.settings.currentLevelId = this.game.settings.nextLevelId;
       }
@@ -34,8 +42,10 @@ export class LevelResultScene extends Scene {
     const width = this.game.width;
     const height = this.game.height;
     const result = this.game.settings.lastRoundResult ?? 'win';
-    const nextLevelId = this.game.settings.nextLevelId ?? 'level02';
     const pass = result === 'win';
+    const currentLevelId = this.game.settings.currentLevelId ?? 'level01';
+    const currentLevelLabel = `Level ${currentLevelId.replace('level', '')}`;
+    const isDevelopmentWall = pass && currentLevelId === 'level03';
 
     ctx.save();
     const sky = ctx.createLinearGradient(0, 0, 0, height);
@@ -52,13 +62,19 @@ export class LevelResultScene extends Scene {
 
     ctx.fillStyle = '#fff3cc';
     ctx.font = 'bold 30px Georgia';
-    ctx.fillText(pass ? 'You are ready for the next level' : 'Restart and try again', width / 2, 250);
+    ctx.fillText(
+      isDevelopmentWall ? 'Đang phát triển màn tiếp theo' : pass ? 'You cleared the level' : 'Try again to improve your score',
+      width / 2,
+      250
+    );
 
-    if (pass) {
-      ctx.fillStyle = '#f6b94b';
-      ctx.font = 'bold 42px Georgia';
-      ctx.fillText(`Next: Level ${nextLevelId.replace('level', '')}`, width / 2, 320);
-    }
+    ctx.fillStyle = 'rgba(255, 248, 230, 0.9)';
+    ctx.font = 'bold 24px Arial';
+    ctx.fillText(currentLevelLabel, width / 2, 310);
+
+    ctx.fillStyle = '#f6b94b';
+    ctx.font = 'bold 28px Arial';
+    ctx.fillText(isDevelopmentWall ? 'Nhấn OK để chơi lại' : pass ? 'Press OK for the next level' : 'Press OK to retry', width / 2, 350);
 
     const { x, y, width: bw, height: bh } = this.okButton;
     const gradient = ctx.createLinearGradient(x, y, x, y + bh);
@@ -71,7 +87,7 @@ export class LevelResultScene extends Scene {
     ctx.strokeRect(x, y, bw, bh);
     ctx.fillStyle = '#fff9ec';
     ctx.font = 'bold 28px Arial';
-    ctx.fillText('OK', x + bw / 2, y + bh / 2 + 1);
+    ctx.fillText(isDevelopmentWall ? 'CHƠI LẠI' : 'OK', x + bw / 2, y + bh / 2 + 1);
     ctx.restore();
   }
 
