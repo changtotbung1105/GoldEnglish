@@ -22,8 +22,8 @@ export const itemCatalog = Object.freeze({
   word: {
     type: 'word',
     spriteKey: 'item.word',
-    width: 40,
-    height: 40,
+    width: 64,
+    height: 64,
     value: 15,
     weight: 1,
     color: '#4c8dc8',

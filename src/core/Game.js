@@ -17,7 +17,7 @@ export class Game {
     this.eventBus = new EventBus();
     this.input = new InputManager(canvas);
     this.assets = new AssetLoader();
-    this.entities = new EntityManager();
+    this.entities = new EntityManager(this);
     this.renderer = new RenderContext(this);
     this.background = new BackgroundRenderer();
     this.viewport = new ViewportManager(canvas, width, height);

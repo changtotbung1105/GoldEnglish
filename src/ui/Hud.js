@@ -1,11 +1,12 @@
 export class Hud {
-  constructor(game, localizationService, gameStateService, learningService) {
+  constructor(game, localizationService, gameStateService, learningService, targetProvider = null) {
     this.game = game;
     this.localization = localizationService;
     this.state = gameStateService;
     this.learning = learningService;
     this.prompt = null;
     this.target = null;
+    this.getTarget = targetProvider;
     this.message = this.localization.t('hud.fire');
     this.helpOpen = false;
     this.unsubscribe = [];
@@ -27,7 +28,7 @@ export class Hud {
       this.game.eventBus.on('level.target.changed', ({ target }) => {
         this.target = target;
         this.message = target
-          ? `Bắt: ${target.translation?.vi ?? target.term}`
+          ? `${this.localization.t('game.target', 'Target')}: ${this.getTargetText(target)}`
           : 'Level complete. Click Next';
       })
     );
@@ -90,7 +91,8 @@ export class Hud {
   render(ctx) {
     const score = this.state.score;
     const timeLeft = this.state.timeLeft;
-    const targetText = this.target?.translation?.vi ?? '---';
+    const target = typeof this.getTarget === 'function' ? this.getTarget() : this.target;
+    const targetText = this.getTargetText(target);
     const level = this.game.currentScene?.currentLevelId?.replace('level', '') ?? '1';
     this.layoutButtons();
 
@@ -103,20 +105,20 @@ export class Hud {
     ctx.strokeRect(0, 0, this.game.width, barHeight);
 
     ctx.fillStyle = '#7b5a14';
-    ctx.font = 'bold 18px Arial';
-    ctx.fillText(`Score: ${score}`, 18, 28);
-    ctx.fillText(`Goal: ${this.target ? 1 : 0}`, 18, 54);
+    ctx.font = 'bold 18px Arial, "Noto Sans", "Segoe UI", sans-serif';
+    ctx.fillText(`${this.localization.t('game.score', 'Score')}: ${score}`, 18, 28);
+    ctx.fillText(`${this.localization.t('game.goal', 'Goal')}: ${this.target ? 1 : 0}`, 18, 54);
 
     ctx.textAlign = 'center';
     ctx.fillStyle = '#7d2400';
-    ctx.font = 'bold 22px Arial';
+    ctx.font = 'bold 22px Arial, "Noto Sans", "Segoe UI", sans-serif';
     ctx.fillText(targetText, this.game.width / 2, 46);
 
     ctx.textAlign = 'right';
     ctx.fillStyle = '#7b5a14';
-    ctx.font = 'bold 18px Arial';
-    ctx.fillText(`Time: ${Math.ceil(timeLeft)}`, this.game.width - 18, 28);
-    ctx.fillText(`Level: ${level}`, this.game.width - 18, 54);
+    ctx.font = 'bold 18px Arial, "Noto Sans", "Segoe UI", sans-serif';
+    ctx.fillText(`${this.localization.t('game.time', 'Time')}: ${Math.ceil(timeLeft)}`, this.game.width - 18, 28);
+    ctx.fillText(`${this.localization.t('game.level', 'Level')}: ${level}`, this.game.width - 18, 54);
 
     this.drawButton(ctx, this.speakButton, 'Speak', '#2d7dd2');
     this.drawButton(ctx, this.restartButton, 'Restart', '#8c4a2f');
@@ -146,6 +148,14 @@ export class Hud {
     }
 
     ctx.restore();
+  }
+
+  getTargetText(target) {
+    if (!target) {
+      return '---';
+    }
+
+    return target.term ?? target.translation?.en ?? '---';
   }
 
   layoutButtons() {

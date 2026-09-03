@@ -3,6 +3,9 @@ import { Hook } from '../entities/Hook.js';
 import { CollisionSystem } from '../systems/CollisionSystem.js';
 import { viLocale } from '../data/locales/vi.js';
 import { enLocale } from '../data/locales/en.js';
+import { koLocale } from '../data/locales/ko.js';
+import { jaLocale } from '../data/locales/ja.js';
+import { zhLocale } from '../data/locales/zh.js';
 import { LocalizationService } from '../services/LocalizationService.js';
 import { LearningService } from '../services/LearningService.js';
 import { GameStateService } from '../services/GameStateService.js';
@@ -36,10 +39,12 @@ export class PlaygroundScene extends Scene {
     this.wrongAttempts = 0;
     this.roundLocked = false;
     this.maxWrongAttempts = 0;
+    this.languageCode = 'vi';
   }
 
   enter() {
-    this.localization = new LocalizationService(viLocale);
+    this.languageCode = this.game.settings?.languageCode ?? localStorage.getItem('goldenglish.languageCode') ?? 'vi';
+    this.localization = new LocalizationService(this.getLocaleByCode(this.languageCode), this.languageCode);
     this.learning = new LearningService(this.game.eventBus, this.localization);
     this.state = new GameStateService(this.game.eventBus);
     this.levels = new LevelService(this.game.eventBus, this.learning, this.state);
@@ -79,6 +84,18 @@ export class PlaygroundScene extends Scene {
     this.mobileControls = new MobileControls(this.game);
     this.mobileTutorial = new MobileTutorial();
     console.log('PlaygroundScene started');
+  }
+
+  getLocaleByCode(languageCode) {
+    const locales = {
+      vi: viLocale,
+      en: enLocale,
+      ko: koLocale,
+      ja: jaLocale,
+      zh: zhLocale,
+    };
+
+    return locales[languageCode] ?? viLocale;
   }
 
   exit() {

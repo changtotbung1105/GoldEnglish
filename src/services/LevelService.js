@@ -44,6 +44,7 @@ export class LevelService {
         x: adjustedPoint.x,
         y: adjustedPoint.y,
         wordId: definition.wordId,
+        imageKey: this.learning.getVocabulary(definition.wordId)?.imageKey ?? null,
       });
 
       if (item.type === 'word') {

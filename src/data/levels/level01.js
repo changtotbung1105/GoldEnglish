@@ -1,8 +1,8 @@
 export const level01 = Object.freeze({
   id: 'level01',
-  name: 'Vocabulary 1',
+  name: 'Animals 1',
   timeLimit: 60,
-  maxWrongAttempts: 5,
+  maxWrongAttempts: 3,
   spawnMode: 'arc',
   spawnArea: {
     centerX: 640,
@@ -13,12 +13,11 @@ export const level01 = Object.freeze({
     angleEnd: Math.PI * 0.82,
   },
   targetSequence: [
-    'vocab_001', 'vocab_002', 'vocab_003', 'vocab_004', 'vocab_005',
-    'vocab_006', 'vocab_007', 'vocab_008', 'vocab_009', 'vocab_010',
+    'vocab_041', 'vocab_042', 'vocab_043', 'vocab_044', 'vocab_045', 'vocab_046',
   ],
-  items: Array.from({ length: 10 }, (_, index) => ({
+  items: Array.from({ length: 6 }, (_, index) => ({
     type: 'word',
     spawnIndex: index,
-    wordId: ['vocab_004', 'vocab_001', 'vocab_009', 'vocab_006', 'vocab_010', 'vocab_003', 'vocab_008', 'vocab_002', 'vocab_007', 'vocab_005'][index],
+    wordId: ['vocab_044', 'vocab_041', 'vocab_045', 'vocab_043', 'vocab_046', 'vocab_042'][index],
   })),
 });

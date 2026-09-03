@@ -1,4 +1,4 @@
-import { vocabularyCatalog } from '../data/vocabularyCatalog.js';
+﻿import { vocabularyCatalog } from '../data/vocabularyCatalog.js';
 
 export class LearningService {
   constructor(eventBus, localizationService) {
@@ -12,6 +12,15 @@ export class LearningService {
     return vocabularyCatalog[wordId] ?? null;
   }
 
+  getLocalizedText(source, fallback = '') {
+    if (!source) {
+      return fallback;
+    }
+
+    const lang = this.localization?.languageCode ?? 'vi';
+    return source[lang] ?? source.vi ?? source.en ?? fallback;
+  }
+
   attachWordItem(item) {
     const entry = this.getVocabulary(item.wordId);
     if (!entry) {
@@ -20,8 +29,12 @@ export class LearningService {
 
     item.learningData = entry;
     item.displayWord = entry.term;
-    item.translation = entry.translation.vi;
+    item.translation = this.getLocalizedText(entry.translation, entry.term);
     item.pronunciation = entry.pronunciation;
+    item.imageKey = entry.imageKey ?? null;
+    if (entry.imageKey) {
+      item.spriteKey = entry.imageKey;
+    }
     return entry;
   }
 
@@ -34,9 +47,9 @@ export class LearningService {
     return {
       wordId: entry.id,
       term: entry.term,
-      translation: entry.translation.vi,
+      translation: this.getLocalizedText(entry.translation, entry.term),
       pronunciation: entry.pronunciation,
-      example: entry.example.vi,
+      example: this.getLocalizedText(entry.example, ''),
       partOfSpeech: entry.partOfSpeech,
       difficulty: entry.difficulty,
       tags: entry.tags,

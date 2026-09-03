@@ -10,7 +10,8 @@ export class BaseItem extends Entity {
     });
 
     this.type = config.type;
-    this.spriteKey = config.spriteKey;
+    this.imageKey = options.imageKey ?? config.imageKey ?? null;
+    this.spriteKey = this.imageKey ?? config.spriteKey;
     this.value = config.value;
     this.weight = config.weight;
     this.color = config.color;
@@ -22,8 +23,8 @@ export class BaseItem extends Entity {
     this.baseY = this.y;
     this.bobOffset = options.bobOffset ?? ((this.x + this.y) % 7);
     this.floatPhase = options.floatPhase ?? ((this.x * 0.01 + this.y * 0.01) % Math.PI);
-    this.floatAmplitude = options.floatAmplitude ?? 4;
-    this.floatSpeed = options.floatSpeed ?? 1.2;
+    this.floatAmplitude = options.floatAmplitude ?? (this.imageKey ? 1.6 : 4);
+    this.floatSpeed = options.floatSpeed ?? (this.imageKey ? 0.55 : 1.2);
     this.collectScale = 1;
     this.collectAlpha = 1;
     this.collidable = true;
@@ -34,6 +35,12 @@ export class BaseItem extends Entity {
       this.floatPhase += dt * this.floatSpeed;
       this.y = this.baseY + Math.sin(this.floatPhase + this.bobOffset) * this.floatAmplitude;
       this.x = this.baseX + Math.cos(this.floatPhase * 0.7 + this.bobOffset) * 1.2;
+      return;
+    }
+
+    if (this.imageKey) {
+      this.collectScale = Math.max(0.82, this.collectScale - dt * 0.4);
+      this.collectAlpha = Math.max(0.75, this.collectAlpha - dt * 0.3);
       return;
     }
 

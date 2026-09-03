@@ -1,10 +1,9 @@
-import { Scene } from './Scene.js';
+﻿import { Scene } from './Scene.js';
 
 export class MenuScene extends Scene {
   constructor() {
     super('MenuScene');
     this.startButton = { x: 520, y: 350, width: 240, height: 72 };
-    this.level6Button = { x: 520, y: 450, width: 240, height: 56 };
   }
 
   enter() {
@@ -21,18 +20,6 @@ export class MenuScene extends Scene {
       return;
     }
 
-    if (
-      (pointer.clicked || pointer.pressed) &&
-      this.isInsideLevel6Button(pointer.x, pointer.y)
-    ) {
-      const playground = this.game.scenes.get('PlaygroundScene');
-      if (playground) {
-        playground.currentLevelId = 'level06';
-      }
-      this.game.changeScene('PlaygroundScene');
-      return;
-    }
-
     if (this.game.input.isKeyPressed('Enter')) {
       this.game.changeScene('PlaygroundScene');
     }
@@ -44,7 +31,6 @@ export class MenuScene extends Scene {
     this.drawTitle(ctx);
     this.drawSubtitle(ctx);
     this.drawStartButton(ctx);
-    this.drawLevel6Button(ctx);
     ctx.restore();
   }
 
@@ -100,26 +86,6 @@ export class MenuScene extends Scene {
     ctx.fillRect(x + 8, y + 8, width - 16, 14);
   }
 
-  drawLevel6Button(ctx) {
-    const { x, y, width, height } = this.level6Button;
-    const gradient = ctx.createLinearGradient(x, y, x, y + height);
-    gradient.addColorStop(0, '#6aa8ff');
-    gradient.addColorStop(1, '#2d67c9');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(x, y, width, height);
-
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(x, y, width, height);
-
-    ctx.fillStyle = '#fff9ec';
-    ctx.font = 'bold 24px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('Level 6', x + width / 2, y + height / 2 + 1);
-    ctx.textBaseline = 'alphabetic';
-  }
-
   isInsideStartButton(x, y) {
     const { startButton } = this;
     return (
@@ -127,16 +93,6 @@ export class MenuScene extends Scene {
       x <= startButton.x + startButton.width &&
       y >= startButton.y &&
       y <= startButton.y + startButton.height
-    );
-  }
-
-  isInsideLevel6Button(x, y) {
-    const { level6Button } = this;
-    return (
-      x >= level6Button.x &&
-      x <= level6Button.x + level6Button.width &&
-      y >= level6Button.y &&
-      y <= level6Button.y + level6Button.height
     );
   }
 }

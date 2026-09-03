@@ -9,9 +9,13 @@ export class AssetLoader {
       const image = new Image();
       image.onload = () => {
         this.images.set(key, image);
+        console.log(`[AssetLoader] loaded ${key} -> ${src}`);
         resolve(image);
       };
-      image.onerror = reject;
+      image.onerror = (error) => {
+        console.warn(`[AssetLoader] failed ${key} -> ${src}`);
+        reject(error);
+      };
       image.src = src;
     });
   }
@@ -23,7 +27,13 @@ export class AssetLoader {
   async loadManifest(manifest = {}) {
     const imageEntries = Object.entries(manifest.images ?? {});
     await Promise.all(
-      imageEntries.map(([key, src]) => this.loadImage(key, src))
+      imageEntries.map(async ([key, src]) => {
+        try {
+          await this.loadImage(key, src);
+        } catch (error) {
+          console.warn(`Failed to load image ${key} from ${src}`, error);
+        }
+      })
     );
   }
 }

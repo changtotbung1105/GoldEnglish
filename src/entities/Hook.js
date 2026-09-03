@@ -193,14 +193,16 @@ export class Hook extends Entity {
     const headRadius = 10 + this.tipPulse * 3;
 
     ctx.save();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
-    ctx.lineWidth = 20;
-    ctx.setLineDash([8, 8]);
-    ctx.beginPath();
-    ctx.moveTo(this.anchorX, this.anchorY);
-    ctx.lineTo(guideTip.x, guideTip.y);
-    ctx.stroke();
-    ctx.setLineDash([]);
+    if (this.state === HookState.IDLE) {
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+      ctx.lineWidth = 20;
+      ctx.setLineDash([8, 8]);
+      ctx.beginPath();
+      ctx.moveTo(this.anchorX, this.anchorY);
+      ctx.lineTo(guideTip.x, guideTip.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
 
     const chainImage = this.game?.renderer?.drawImageByKey(
       ctx,

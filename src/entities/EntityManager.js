@@ -1,9 +1,14 @@
 export class EntityManager {
-  constructor() {
+  constructor(game = null) {
+    this.game = game;
     this.entities = [];
   }
 
   add(entity) {
+    if (entity && !entity.game) {
+      entity.game = this.game;
+    }
+
     this.entities.push(entity);
     return entity;
   }

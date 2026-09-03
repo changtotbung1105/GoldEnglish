@@ -8,20 +8,10 @@ export class WordItem extends BaseItem {
     this.translation = options.translation ?? null;
     this.pronunciation = options.pronunciation ?? null;
     this.learningData = null;
+    this.spriteKey = options.spriteKey ?? this.spriteKey;
   }
 
   render(ctx) {
     super.render(ctx);
-
-    const label = this.displayWord ?? this.wordId ?? 'WORD';
-    ctx.save();
-    ctx.fillStyle = '#ffffff';
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.45)';
-    ctx.lineWidth = 4;
-    ctx.font = 'bold 15px Arial';
-    ctx.textAlign = 'center';
-    ctx.strokeText(label, this.x, this.y + 22);
-    ctx.fillText(label, this.x, this.y + 22);
-    ctx.restore();
   }
 }
