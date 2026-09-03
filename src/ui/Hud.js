@@ -94,10 +94,11 @@ export class Hud {
     const target = typeof this.getTarget === 'function' ? this.getTarget() : this.target;
     const targetText = this.getTargetText(target);
     const level = this.game.currentScene?.currentLevelId?.replace('level', '') ?? '1';
-    this.layoutButtons();
+    const isMobileLike = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 900;
+    this.layoutButtons(isMobileLike);
 
     ctx.save();
-    const barHeight = 78;
+    const barHeight = isMobileLike ? 82 : 78;
     ctx.fillStyle = 'rgba(245, 190, 58, 0.95)';
     ctx.fillRect(0, 0, this.game.width, barHeight);
     ctx.strokeStyle = '#8d6414';
@@ -105,20 +106,21 @@ export class Hud {
     ctx.strokeRect(0, 0, this.game.width, barHeight);
 
     ctx.fillStyle = '#7b5a14';
-    ctx.font = 'bold 18px Arial, "Noto Sans", "Segoe UI", sans-serif';
-    ctx.fillText(`${this.localization.t('game.score', 'Score')}: ${score}`, 18, 28);
-    ctx.fillText(`${this.localization.t('game.goal', 'Goal')}: ${this.target ? 1 : 0}`, 18, 54);
+    ctx.font = isMobileLike ? 'bold 15px Arial, "Noto Sans", "Segoe UI", sans-serif' : 'bold 18px Arial, "Noto Sans", "Segoe UI", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${this.localization.t('game.score', 'Score')}: ${score}`, 18, isMobileLike ? 24 : 28);
+    ctx.fillText(`${this.localization.t('game.goal', 'Goal')}: ${this.target ? 1 : 0}`, 18, isMobileLike ? 46 : 54);
 
     ctx.textAlign = 'center';
     ctx.fillStyle = '#7d2400';
-    ctx.font = 'bold 22px Arial, "Noto Sans", "Segoe UI", sans-serif';
-    ctx.fillText(targetText, this.game.width / 2, 46);
+    ctx.font = isMobileLike ? 'bold 19px Arial, "Noto Sans", "Segoe UI", sans-serif' : 'bold 22px Arial, "Noto Sans", "Segoe UI", sans-serif';
+    ctx.fillText(targetText, this.game.width / 2, isMobileLike ? 30 : 46);
 
     ctx.textAlign = 'right';
     ctx.fillStyle = '#7b5a14';
-    ctx.font = 'bold 18px Arial, "Noto Sans", "Segoe UI", sans-serif';
-    ctx.fillText(`${this.localization.t('game.time', 'Time')}: ${Math.ceil(timeLeft)}`, this.game.width - 18, 28);
-    ctx.fillText(`${this.localization.t('game.level', 'Level')}: ${level}`, this.game.width - 18, 54);
+    ctx.font = isMobileLike ? 'bold 15px Arial, "Noto Sans", "Segoe UI", sans-serif' : 'bold 18px Arial, "Noto Sans", "Segoe UI", sans-serif';
+    ctx.fillText(`${this.localization.t('game.time', 'Time')}: ${Math.ceil(timeLeft)}`, this.game.width - 18, isMobileLike ? 24 : 28);
+    ctx.fillText(`${this.localization.t('game.level', 'Level')}: ${level}`, this.game.width - 18, isMobileLike ? 46 : 54);
 
     this.drawButton(ctx, this.speakButton, 'Speak', '#2d7dd2');
     this.drawButton(ctx, this.restartButton, 'Restart', '#8c4a2f');
@@ -138,13 +140,13 @@ export class Hud {
 
     ctx.textAlign = 'left';
     ctx.fillStyle = '#fff7e8';
-    ctx.font = '14px Arial';
-    ctx.fillText(this.message, 18, barHeight + 20);
+    ctx.font = isMobileLike ? '13px Arial' : '14px Arial';
+    ctx.fillText(this.message, 18, this.game.height - 26);
 
     if (this.outcome) {
       ctx.fillStyle = this.outcome.type === 'success' ? '#7cff6b' : '#ff6b6b';
-      ctx.font = 'bold 16px Arial';
-      ctx.fillText(this.outcome.message, 18, barHeight + 42);
+      ctx.font = 'bold 15px Arial';
+      ctx.fillText(this.outcome.message, 18, this.game.height - 8);
     }
 
     ctx.restore();
@@ -158,9 +160,31 @@ export class Hud {
     return target.term ?? target.translation?.en ?? '---';
   }
 
-  layoutButtons() {
+  layoutButtons(isMobileLike = false) {
     const barY = 0;
     const gap = 8;
+
+    if (isMobileLike) {
+      this.speakButton.width = 62;
+      this.speakButton.height = 24;
+      this.restartButton.width = 72;
+      this.restartButton.height = 24;
+      this.helpButton.width = 52;
+      this.helpButton.height = 24;
+      this.nextButton.width = 56;
+      this.nextButton.height = 24;
+
+      this.speakButton.x = 18;
+      this.speakButton.y = barY;
+      this.restartButton.x = this.game.width - 18 - this.restartButton.width;
+      this.restartButton.y = barY;
+      this.helpButton.x = this.restartButton.x - gap - this.helpButton.width;
+      this.helpButton.y = barY;
+      this.nextButton.x = this.helpButton.x - gap - this.nextButton.width;
+      this.nextButton.y = barY;
+      return;
+    }
+
     const totalWidth =
       this.speakButton.width +
       this.restartButton.width +

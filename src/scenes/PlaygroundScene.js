@@ -194,18 +194,24 @@ export class PlaygroundScene extends Scene {
       }
     }
 
-    const mobileHit = this.mobileControls?.hitTest(this.game.input.pointer.x, this.game.input.pointer.y);
+    const isMobileLike = this.mobileControls?.isMobileLike?.() ?? false;
+    const tapPoint = this.game.input.pointer.clicked ? { x: this.game.input.pointer.x, y: this.game.input.pointer.y } : null;
     if (this.mobileControls) {
-      this.mobileControls.activeButton = mobileHit;
+      this.mobileControls.activeButton = null;
     }
-    const isTouchingControls = this.game.input.pointer.down || this.game.input.pointer.pressed;
-    if (isTouchingControls) {
-      if (mobileHit === 'left') {
-        this.game.input.keysDown.add('ArrowLeft');
-      } else if (mobileHit === 'right') {
-        this.game.input.keysDown.add('ArrowRight');
-      } else if (mobileHit === 'fire' && this.game.input.pointer.clicked) {
-        this.game.input.keysPressed.add(' ');
+
+    if (isMobileLike && tapPoint && this.state?.roundActive) {
+      const hitItem = this.getItemAtPoint(tapPoint.x, tapPoint.y);
+      if (this.hook.state === 'idle') {
+        const targetAngle = this.getPointerAimAngle(tapPoint.x, tapPoint.y);
+        if (targetAngle !== null) {
+          this.hook.setAngle(targetAngle);
+        }
+
+        if (hitItem) {
+          this.hook.fire();
+          return;
+        }
       }
     }
 
@@ -218,7 +224,7 @@ export class PlaygroundScene extends Scene {
     if (this.hook.state === 'idle') {
       const manualLeft = this.game.input.isKeyDown('ArrowLeft');
       const manualRight = this.game.input.isKeyDown('ArrowRight');
-      const directPointerAim = this.game.input.pointer.down && !mobileHit;
+      const directPointerAim = this.game.input.pointer.down && !isMobileLike;
 
       if (manualLeft || manualRight || directPointerAim) {
         this.hook.clearAutoAimTarget();
@@ -238,6 +244,7 @@ export class PlaygroundScene extends Scene {
           this.hook.setAngle(targetAngle);
         }
       }
+
     }
 
     if (this.game.input.isKeyPressed(' ') || this.game.input.isKeyPressed('Space')) {
@@ -288,16 +295,31 @@ export class PlaygroundScene extends Scene {
     this.game.requestSceneChange('LevelResultScene');
   }
 
-  getPointerAimAngle() {
-    const pointer = this.game.input.pointer;
-    const dx = pointer.x - this.hook.anchorX;
-    const dy = pointer.y - this.hook.anchorY;
+  getPointerAimAngle(x = this.game.input.pointer.x, y = this.game.input.pointer.y) {
+    const dx = x - this.hook.anchorX;
+    const dy = y - this.hook.anchorY;
     if (dx === 0 && dy === 0) {
       return null;
     }
 
     const angle = Math.atan2(dy, dx);
     return this.hook.clampAngle(angle < 0 ? angle + Math.PI * 2 : angle);
+  }
+
+  getItemAtPoint(x, y) {
+    for (let i = this.items.length - 1; i >= 0; i -= 1) {
+      const item = this.items[i];
+      if (!item.active || item.attached || item.collidable === false) continue;
+
+      const radius = item.radius ?? Math.max(item.width ?? 40, item.height ?? 40) * 0.5;
+      const dx = x - item.x;
+      const dy = y - item.y;
+      if (dx * dx + dy * dy <= radius * radius) {
+        return item;
+      }
+    }
+
+    return null;
   }
 
   handleCollectedItem(item) {
